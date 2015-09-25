@@ -3,10 +3,6 @@ from django.conf.urls import patterns, url
 import views
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'project.views.home', name='home'),
-    # url(r'^blog/', include('blog.urls')),
-
     url(r'^$', views.index, name="index"),
     url(r'edit/(?P<id>([0-9.]+))', views.edit, name="edit"),
     url(r'up/(?P<id>([0-9.]+))/(?P<cur_id>([0-9.]*))', views.up, name="up"),

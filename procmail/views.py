@@ -6,7 +6,6 @@ import pyprocmail.procmail
 from pyprocmail import procmail
 import forms
 
-# Create your views here.
 
 class CreateStatement(SessionWizardView):
     form_list = [
@@ -19,10 +18,22 @@ class CreateStatement(SessionWizardView):
     ]
 
     condition_dict = {
-        "assignment": lambda wizard: wizard.get_cleaned_data_for_step("choose") and wizard.get_cleaned_data_for_step("choose").get("statement") == "assignment",
-        "header": lambda wizard: wizard.get_cleaned_data_for_step("choose") and wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe",
-        "conditions": lambda wizard: wizard.get_cleaned_data_for_step("choose") and wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe",
-        "action": lambda wizard: wizard.get_cleaned_data_for_step("choose") and wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe",
+        "assignment": (
+            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == "assignment"
+        ),
+        "header": (
+            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe"
+        ),
+        "conditions": (
+            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe"
+        ),
+        "action": (
+            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe"
+        ),
     }
 
     def get_template_names(self):
@@ -35,31 +46,56 @@ class CreateStatement(SessionWizardView):
             if self.steps.current == step:
                 break
             form_context.append(self.get_cleaned_data_for_step(step))
-        context.update({'form_data' : form_context})
+        context.update({'form_data': form_context})
         return context
-
 
     def done(self, form_list, form_dict, **kwargs):
         typ = self.get_cleaned_data_for_step("choose")["statement"]
         procmailrc = pyprocmail.procmail.parse("/home/valentin/.procmailrc")
         if typ == "recipe":
-            return do_edit_recipe(self.kwargs['id'], None, procmailrc, form_dict["metadata"], form_dict["header"], form_dict["conditions"], form_dict["action"])
+            return do_edit_recipe(
+                self.kwargs['id'],
+                None,
+                procmailrc,
+                form_dict["metadata"],
+                form_dict["header"],
+                form_dict["conditions"],
+                form_dict["action"]
+            )
         elif typ == "assignment":
-            return do_edit_assignment(self.kwargs['id'], None, procmailrc, form_dict["metadata"], form_dict["assignment"])
+            return do_edit_assignment(
+                self.kwargs['id'],
+                None,
+                procmailrc,
+                form_dict["metadata"],
+                form_dict["assignment"]
+            )
 
 
 def index(request):
     procmailrc = pyprocmail.procmail.parse("/home/valentin/.procmailrc")
     return render(request, "procmail/index.html", {"procmailrc": procmailrc})
 
-def do_edit_recipe(id, r, procmailrc, form_meta, form_header, form_condition, form_action, create=False, delete=False):
+
+def do_edit_recipe(
+    id,
+    r,
+    procmailrc,
+    form_meta,
+    form_header,
+    form_condition,
+    form_action,
+    create=False,
+    delete=False
+):
             if r is None:
                 r = procmail.Recipe(procmail.Header(), procmail.Action())
                 r.parent = get_rule(procmailrc, id)
                 r.parent.append(r)
                 r.id = "%s.%s" % (r.parent.id, len(r.parent) - 1)
                 id = r.id
-            if form_meta.is_valid() and form_header.is_valid() and form_action.is_valid() and form_condition.is_valid():
+            if form_meta.is_valid() and form_header.is_valid() \
+                    and form_action.is_valid() and form_condition.is_valid():
                 # header
                 r.header.H = form_header.cleaned_data['H']
                 r.header.B = form_header.cleaned_data['B']
@@ -96,17 +132,27 @@ def do_edit_recipe(id, r, procmailrc, form_meta, form_header, form_condition, fo
                     if fcond.cleaned_data['negate']:
                         cond = procmail.ConditionNegate(cond)
                     if fcond.cleaned_data['score']:
-                        cond = procmail.ConditionScore(fcond.cleaned_data['score_x'], fcond.cleaned_data['score_y'], cond)
+                        cond = procmail.ConditionScore(
+                            fcond.cleaned_data['score_x'],
+                            fcond.cleaned_data['score_y'],
+                            cond
+                        )
                     if fcond.cleaned_data['substitute']:
-                       for i in range(fcond.cleaned_data['substitute_counter']):
-                           cond = procmail.ConditionSubstitute(cond)
+                        for i in range(fcond.cleaned_data['substitute_counter']):
+                            cond = procmail.ConditionSubstitute(cond)
                     if fcond.cleaned_data['variable']:
-                        cond = procmail.ConditionVariable(fcond.cleaned_data['variable_name'], cond)
+                        cond = procmail.ConditionVariable(
+                            fcond.cleaned_data['variable_name'],
+                            cond
+                        )
                     conditions.append(cond)
                 r.conditions = conditions
                 # action
-                if form_action.cleaned_data['action_type'] != r.action.type or form_action.cleaned_data['action_type'] != procmail.ActionNested.type:
-                    r.action = procmail.Action.from_type(form_action.cleaned_data['action_type'])(*form_action.params)
+                if form_action.cleaned_data['action_type'] != r.action.type or \
+                        form_action.cleaned_data['action_type'] != procmail.ActionNested.type:
+                    r.action = procmail.Action.from_type(
+                        form_action.cleaned_data['action_type']
+                    )(*form_action.params)
                 if create:
                     procmailrc.write("/home/valentin/.procmailrc")
                     return redirect("procmail:create", id=id)
@@ -116,6 +162,7 @@ def do_edit_recipe(id, r, procmailrc, form_meta, form_header, form_condition, fo
                     return redirect("procmail:edit", id=".".join(id.split('.')[:-1]))
                 procmailrc.write("/home/valentin/.procmailrc")
                 return redirect("procmail:edit", id=id)
+
 
 def do_edit_assignment(id, r, procmailrc, form_meta, form_assignment, delete=False):
             if r is None:
@@ -155,23 +202,64 @@ def edit(request, id):
     params = {"procmailrc": procmailrc, "curr_stmt": r}
     if request.method == 'POST':
         if r.is_recipe():
-            form_meta = forms.MetaForm(request.POST, initial=forms.meta_form_initial(r), prefix="meta")
-            form_header = forms.HeaderForm(request.POST, initial=forms.header_form_initial(r), prefix="header")
-            form_action = forms.ActionForm(request.POST, initial=forms.action_form_initial(r), prefix="action")
-            form_condition = forms.ConditionFormSet(request.POST, initial=forms.conditions_form_initial(r.conditions), prefix="condition")
+            form_meta = forms.MetaForm(
+                request.POST,
+                initial=forms.meta_form_initial(r),
+                prefix="meta"
+            )
+            form_header = forms.HeaderForm(
+                request.POST,
+                initial=forms.header_form_initial(r),
+                prefix="header"
+            )
+            form_action = forms.ActionForm(
+                request.POST,
+                initial=forms.action_form_initial(r),
+                prefix="action"
+            )
+            form_condition = forms.ConditionFormSet(
+                request.POST,
+                initial=forms.conditions_form_initial(r.conditions),
+                prefix="condition"
+            )
             params["form_meta"] = form_meta
             params["form_header"] = form_header
             params["form_action"] = form_action
             params["form_condition"] = form_condition
-            ret = do_edit_recipe(id, r, procmailrc, form_meta, form_header, form_condition, form_action, create=("action_add" in request.POST), delete=("delete_stmt" in request.POST))
+            ret = do_edit_recipe(
+                id,
+                r,
+                procmailrc,
+                form_meta,
+                form_header,
+                form_condition,
+                form_action,
+                create=("action_add" in request.POST),
+                delete=("delete_stmt" in request.POST)
+            )
             if ret:
                 return ret
         elif r.is_assignment():
-            form_meta = forms.MetaForm(request.POST, initial=forms.meta_form_initial(r), prefix="meta")
-            form_assignment = forms.AssignmentFormSet(request.POST, initial=forms.assignment_form_initial(r), prefix="assignment")
+            form_meta = forms.MetaForm(
+                request.POST,
+                initial=forms.meta_form_initial(r),
+                prefix="meta"
+            )
+            form_assignment = forms.AssignmentFormSet(
+                request.POST,
+                initial=forms.assignment_form_initial(r),
+                prefix="assignment"
+            )
             params["form_meta"] = form_meta
             params["form_assignment"] = form_assignment
-            ret = do_edit_assignment(id, r, procmailrc, form_meta, form_assignment, delete=("delete_stmt" in request.POST))
+            ret = do_edit_assignment(
+                id,
+                r,
+                procmailrc,
+                form_meta,
+                form_assignment,
+                delete=("delete_stmt" in request.POST)
+            )
             if ret:
                 return ret
     else:
@@ -179,23 +267,32 @@ def edit(request, id):
             form_meta = forms.MetaForm(initial=forms.meta_form_initial(r), prefix="meta")
             form_header = forms.HeaderForm(initial=forms.header_form_initial(r), prefix="header")
             form_action = forms.ActionForm(initial=forms.action_form_initial(r), prefix="action")
-            form_condition = forms.ConditionFormSet(initial=forms.conditions_form_initial(r.conditions), prefix="condition")
+            form_condition = forms.ConditionFormSet(
+                initial=forms.conditions_form_initial(r.conditions),
+                prefix="condition"
+            )
             params["form_meta"] = form_meta
             params["form_header"] = form_header
             params["form_action"] = form_action
             params["form_condition"] = form_condition
         elif r.is_assignment():
             form_meta = forms.MetaForm(initial=forms.meta_form_initial(r), prefix="meta")
-            form_assignment = forms.AssignmentFormSet(initial=forms.assignment_form_initial(r), prefix="assignment")
+            form_assignment = forms.AssignmentFormSet(
+                initial=forms.assignment_form_initial(r),
+                prefix="assignment"
+            )
             params["form_meta"] = form_meta
             params["form_assignment"] = form_assignment
-        
     return render(request, "procmail/edit.html", params)
 
+
 def up(request, id, cur_id):
-    return up_down(request, id, cur_id, lambda x,y:x-y, lambda ids, r: ids[-1] == "0")
+    return up_down(request, id, cur_id, lambda x, y: x-y, lambda ids, r: ids[-1] == "0")
+
+
 def down(request, id, cur_id):
-    return up_down(request, id, cur_id, lambda x,y:x+y, lambda ids, r: int(ids[-1]) == len(r) - 1)
+    return up_down(request, id, cur_id, lambda x, y: x+y, lambda ids, r: int(ids[-1]) == len(r) - 1)
+
 
 def up_down(request, id, cur_id, op, test):
     ids = id.split('.')
@@ -215,9 +312,9 @@ def up_down(request, id, cur_id, op, test):
             return redirect("procmail:edit", id=cur_id)
 
     i = int(ids[-1])
-    j=op(i, 1)
-    while j>0 and j<len(r) and r[j].is_comment():
-        j=op(j, 1)
+    j = op(i, 1)
+    while j > 0 and j < len(r) and r[j].is_comment():
+        j = op(j, 1)
     if r[j].is_comment():
         return redirect("procmail:edit", id=cur_id)
     r[j], r[i] = r[i], r[j]
