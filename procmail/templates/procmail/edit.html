@@ -68,6 +68,11 @@
       <tr id="action_param">
         <td>{{form_action.action_param.label_tag}}</td><td>{{ form_action.action_param.errors }} {{ form_action.action_param }} {{ form_action.action_param.help_text}}</td>
       </tr>
+      {% if curr_stmt.action.is_nested %}
+      {% for stmt in curr_stmt %}
+      <tr><td colspan="2"><a href="{% url "procmail:edit" stmt.id %}">{% if stmt.meta_title %}{{stmt.meta_title}}{% else %}{{stmt.gen_title}}{% endif %}</a></td></tr>
+      {% endfor %}
+      {% endif %}
       <tr id="action_nested">
        <td colspan="2" style="text-align:center"><input type="submit" name="action_add" value="Add action" class="btn btn-primary btn-lg  btn-block"/></td>
       </tr>
