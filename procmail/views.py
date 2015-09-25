@@ -10,12 +10,33 @@
 #
 # (c) 2015 Valentin Samir
 from django.shortcuts import render, redirect
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.contrib.formtools.wizard.views import SessionWizardView
+
+import os
+import shutil
 
 import pyprocmail.procmail
 from pyprocmail import procmail
 import forms
+
+def get_procmailrc(user):
+    if settings.PROCMAIL_INPLACE:
+        home = os.path.expanduser("~%s" % user.username)
+        procmailrc_path = os.path.join(home, ".procmailrc")
+    else:
+        procmailrc_path = os.path.join(settings.PROCMAIL_DEBUG_DIR, "%s.procmailrc" % user.username)
+        if not os.path.isfile(procmailrc_path):
+            home = os.path.expanduser("~%s" % user.username)
+            if os.path.isfile(os.path.join(home, ".procmailrc")):
+                shutil.copy(os.path.join(home, ".procmailrc"), procmailrc_path)
+    if not os.path.isfile(procmailrc_path):
+        open(procmailrc_path, 'a').close()
+
+    return pyprocmail.procmail.parse(procmailrc_path)
+
 
 
 class CreateStatement(SessionWizardView):
@@ -62,7 +83,7 @@ class CreateStatement(SessionWizardView):
 
     def done(self, form_list, form_dict, **kwargs):
         typ = self.get_cleaned_data_for_step("choose")["statement"]
-        procmailrc = pyprocmail.procmail.parse("/home/valentin/.procmailrc")
+        procmailrc = get_procmailrc(self.request.user)
         if typ == "recipe":
             return do_edit_recipe(
                 self.kwargs['id'],
@@ -83,8 +104,9 @@ class CreateStatement(SessionWizardView):
             )
 
 
+@login_required
 def index(request):
-    procmailrc = pyprocmail.procmail.parse("/home/valentin/.procmailrc")
+    procmailrc = get_procmailrc(request.user)
     return render(request, "procmail/index.html", {"procmailrc": procmailrc})
 
 
@@ -215,10 +237,11 @@ def get_rule(procmailrc, id):
     return r
 
 
+@login_required
 def edit(request, id):
     if not id:
         return redirect("procmail:index")
-    procmailrc = pyprocmail.procmail.parse("/home/valentin/.procmailrc")
+    procmailrc = get_procmailrc(request.user)
     r = get_rule(procmailrc, id)
 
     params = {"procmailrc": procmailrc, "curr_stmt": r}
@@ -308,10 +331,12 @@ def edit(request, id):
     return render(request, "procmail/edit.html", params)
 
 
+@login_required
 def up(request, id, cur_id):
     return up_down(request, id, cur_id, lambda x, y: x-y, lambda ids, r: ids[-1] == "0")
 
 
+@login_required
 def down(request, id, cur_id):
     return up_down(request, id, cur_id, lambda x, y: x+y, lambda ids, r: int(ids[-1]) == len(r) - 1)
 
@@ -319,7 +344,7 @@ def down(request, id, cur_id):
 def up_down(request, id, cur_id, op, test):
     ids = id.split('.')
 
-    procmailrc = pyprocmail.procmail.parse("/home/valentin/.procmailrc")
+    procmailrc = get_procmailrc(request.user)
     r = procmailrc
     try:
         for i in ids[:-1]:

@@ -10,3 +10,20 @@
 #
 # (c) 2015 Valentin Samir
 
+from django.conf import settings
+
+
+_DEFAULTS = {
+    'PROCMAIL_INPLACE': True
+    'PROCMAIL_DEBUG_DIR': None
+}
+
+for key, value in list(_DEFAULTS.items()):
+    try:
+        getattr(settings, key)
+    except AttributeError:
+        setattr(settings, key, value)
+    # Suppress errors from DJANGO_SETTINGS_MODULE not being set
+    except ImportError:
+        pass
+
