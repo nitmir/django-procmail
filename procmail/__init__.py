@@ -14,7 +14,7 @@ from django.conf import settings
 
 
 _DEFAULTS = {
-    'PROCMAIL_INPLACE': True
+    'PROCMAIL_INPLACE': True,
     'PROCMAIL_DEBUG_DIR': None
 }
 
