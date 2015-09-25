@@ -1,0 +1,53 @@
+{% extends "procmail/base.html" %}
+{% block content %}
+{{ wizard.form.media }}
+<p>Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}</p>
+  <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".advanced_params">
+    Show Advanced parameters
+  </button>
+<br/>
+<br/>
+<form action="" method="post">{% csrf_token %}
+    {% if wizard.form.non_field_errors %}
+      {{wizard.form.non_field_errors}}
+    {% endif %}
+<table class="table table-striped table-bordered">
+{{ wizard.management_form }}
+{{wizard.form.show_init}}
+{% if wizard.form.forms %}
+    {{ wizard.form.management_form }}
+      <tr>
+      {% for field in wizard.form.0 %}
+         <th {% if not field.field.show %}class="collapse advanced_params"{% endif %}>
+           {{field.label}}
+         </th>
+      {% endfor %}
+      </tr>
+      {% for fcond in wizard.form %}
+        {% if fcond.non_field_errors %}
+          <tr><td colspan="30">{{fcond.non_field_errors}}</td></tr>
+        {% endif %}
+        <tr>
+        {% for field in fcond %}
+          <td {% if not field.field.show %}class="collapse advanced_params"{% endif %}>
+            {{field.errors}} {{field}}
+          </td>
+        {% endfor %}
+        </tr>
+      {% endfor %}
+
+{% else %}
+    {% for field in wizard.form %}
+      <tr {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
+        <td>{{field.label_tag}}</td><td>{{ field.errors }} {{ field }} {{ field.help_text}}</td>
+      </tr>
+    {% endfor %}
+{% endif %}
+</table>
+{% if wizard.steps.prev %}
+<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}" class="btn btn-secondary">first step</button>
+<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}" class="btn btn-secondary">prev step</button>
+{% endif %}
+<input type="submit" value="submit" class="btn btn-primary"/>
+</form>
+{% endblock %}
