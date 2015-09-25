@@ -134,8 +134,8 @@ def do_edit_recipe(
                 r = procmail.Recipe(procmail.Header(), procmail.Action())
                 r.parent = get_rule(procmailrc, id)
                 r.parent.append(r)
-                if r.parent.id:
-                    r.id = "%s.%s" % (r.parent.id, len(r.parent) - 1)
+                if id:
+                    r.id = "%s.%s" % (id, len(r.parent) - 1)
                 else:
                     r.id = "%s" % (len(r.parent) - 1)
                 id = r.id
@@ -214,8 +214,8 @@ def do_edit_assignment(request, id, r, procmailrc, form_meta, form_assignment, d
                 r = procmail.Assignment([])
                 r.parent = get_rule(procmailrc, id)
                 r.parent.append(r)
-                if r.id:
-                    r.id = "%s.%s" % (r.parent.id, len(r.parent) - 1)
+                if id:
+                    r.id = "%s.%s" % (id, len(r.parent) - 1)
                 else:
                     r.id = "%s" % (len(r.parent) - 1)
                 id = r.id
