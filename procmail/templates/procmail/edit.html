@@ -95,17 +95,28 @@ $('#id_action-action_type').ready(hide_param);
   {% elif curr_stmt.is_assignment %}
 
     {{ form_assignment.management_form }}
+    {{ form_assignment.show_init }}
     <h2>Assignement</h2>
     {% if form_assignment.non_form_errors %}
       {{form_assignment.non_form_errors}}
     {% endif %}
     <table class="table table-striped table-bordered">
-      <tr><th>{{form_assignment.0.variable_name.label}}</th><th>{{form_assignment.0.value.label}}</th><th>{{form_assignment.0.DELETE.label}}</th></tr>
+      <tr>
+        <th>{{form_assignment.0.variable_name.label}}</th>
+        <th>{{form_assignment.0.value.label}}</th>
+        <th {% if not form_assignment.0.shell.field.show %}class="collapse advanced_params"{% endif %}>{{form_assignment.0.shell.label}}</th>
+        <th>{{form_assignment.0.DELETE.label}}</th>
+     </tr>
       {% for form in form_assignment %}
         {% if form.non_field_errors %}
           <tr><td colspan="3">{{form.non_field_errors}}</td></tr>
         {% endif %}
-        <tr><td>{{form.variable_name}} {{form.variable_name.errors}}</td><td>{{form.value}} {{form.value.errors}}</td><td>{% if form.variable_name.value %}{{form.DELETE}}{% endif %}</td></tr>
+        <tr>
+          <td>{{form.variable_name}} {{form.variable_name.errors}}</td>
+          <td>{{form.value}} {{form.value.errors}}</td>
+          <td {% if not form.shell.field.show %}class="collapse advanced_params"{% endif %}>{{form.shell}} {{form.shell.errors}}</td>
+          <td>{% if form.variable_name.value %}{{form.DELETE}}{% endif %}</td>
+        </tr>
       {% endfor %}
     </table>
   {% endif %}

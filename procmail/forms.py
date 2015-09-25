@@ -53,7 +53,7 @@ class AssignmentBaseFormSet(BaseFormSet):
         for form in self.forms:
             if 'variable_name' in form.cleaned_data and not form.cleaned_data.get('DELETE', False):
                 variables.append(
-                    (form.cleaned_data['variable_name'], form.cleaned_data.get('value', None))
+                    (form.cleaned_data['variable_name'], form.cleaned_data.get('value', None), form.cleaned_data.get('quote', None))
                 )
         if not variables:
             raise forms.ValidationError(
@@ -279,6 +279,24 @@ class ConditionForm(forms.Form):
 class AssignmentForm(forms.Form):
     variable_name = forms.CharField(label='variable name', max_length=256)
     value = forms.CharField(label='value', max_length=256, required=False)
+    shell = forms.BooleanField(
+        label="Shell eval",
+        required=False,
+        initial=False
+    ).set_extra(show_if_value_not=False)
+
+
+    def clean(self):
+        if self.cleaned_data["shell"] and self.cleaned_data["value"]:
+            self.cleaned_data["quote"] = "`"
+        elif self.cleaned_data["value"]:
+            if not "'" in self.cleaned_data["value"]:
+                self.cleaned_data["quote"] = "'"
+            else:
+                self.cleaned_data["quote"] = '"'
+        else:
+            self.cleaned_data["quote"] = None
+
 
 
 AssignmentFormSet = formset_factory(
@@ -380,10 +398,11 @@ def conditions_form_initial(conditions):
 
 def assignment_form_initial(assignment):
     initials = []
-    for (variable_name, value) in assignment.variables:
+    for (variable_name, value, quote) in assignment.variables:
         initials.append({
             'variable_name': variable_name,
-            'value': value
+            'value': value,
+            'shell': (quote == '`'),
         })
     return initials
 
