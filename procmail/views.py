@@ -103,7 +103,10 @@ def do_edit_recipe(
                 r = procmail.Recipe(procmail.Header(), procmail.Action())
                 r.parent = get_rule(procmailrc, id)
                 r.parent.append(r)
-                r.id = "%s.%s" % (r.parent.id, len(r.parent) - 1)
+                if r.parent.id:
+                    r.id = "%s.%s" % (r.parent.id, len(r.parent) - 1)
+                else:
+                    r.id = "%s" % (len(r.parent) - 1)
                 id = r.id
             if form_meta.is_valid() and form_header.is_valid() \
                     and form_action.is_valid() and form_condition.is_valid():
@@ -180,7 +183,10 @@ def do_edit_assignment(id, r, procmailrc, form_meta, form_assignment, delete=Fal
                 r = procmail.Assignment([])
                 r.parent = get_rule(procmailrc, id)
                 r.parent.append(r)
-                r.id = "%s.%s" % (r.parent.id, len(r.parent) - 1)
+                if r.id:
+                    r.id = "%s.%s" % (r.parent.id, len(r.parent) - 1)
+                else:
+                    r.id = "%s" % (len(r.parent) - 1)
                 id = r.id
             if form_meta.is_valid() and form_assignment.is_valid():
                 r.meta_title = form_meta.cleaned_data['title']
@@ -197,6 +203,9 @@ def do_edit_assignment(id, r, procmailrc, form_meta, form_assignment, delete=Fal
 
 def get_rule(procmailrc, id):
     ids = id.split('.')
+    print "%r" % id
+    if id == "":
+        return procmailrc
     r = procmailrc
     try:
         for i in ids:
@@ -207,6 +216,8 @@ def get_rule(procmailrc, id):
 
 
 def edit(request, id):
+    if not id:
+        return redirect("procmail:index")
     procmailrc = pyprocmail.procmail.parse("/home/valentin/.procmailrc")
     r = get_rule(procmailrc, id)
 

@@ -11,6 +11,9 @@
     {% if wizard.form.non_field_errors %}
       {{wizard.form.non_field_errors}}
     {% endif %}
+{% if wizard.form.forms and wizard.form.non_form_errors %}
+  {{wizard.form.non_form_errors}}
+{% endif %}
 <table class="table table-striped table-bordered">
 {{ wizard.management_form }}
 {{wizard.form.show_init}}
@@ -23,12 +26,12 @@
          </th>
       {% endfor %}
       </tr>
-      {% for fcond in wizard.form %}
-        {% if fcond.non_field_errors %}
-          <tr><td colspan="30">{{fcond.non_field_errors}}</td></tr>
+      {% for form in wizard.form %}
+        {% if form.non_field_errors %}
+          <tr><td colspan="30">{{form.non_field_errors}}</td></tr>
         {% endif %}
         <tr>
-        {% for field in fcond %}
+        {% for field in form %}
           <td {% if not field.field.show %}class="collapse advanced_params"{% endif %}>
             {{field.errors}} {{field}}
           </td>

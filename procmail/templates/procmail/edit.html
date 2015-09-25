@@ -31,6 +31,9 @@
     <h2>Conditions</h2>
     {{ form_condition.management_form }}
     {{form_condition.show_init}}
+    {% if form_condition.non_form_errors %}
+      {{form_condition.non_form_errors}}
+    {% endif %}
     <table class="table table-striped table-bordered">
       <tr>
       {% for field in form_condition.0 %}
@@ -66,7 +69,7 @@
         <td>{{form_action.action_param.label_tag}}</td><td>{{ form_action.action_param.errors }} {{ form_action.action_param }} {{ form_action.action_param.help_text}}</td>
       </tr>
       <tr id="action_nested">
-       <td colspan="2" style="text-align:center"><input type="submit" name="action_add" value="Add action" class="btn btn-primary"/></td>
+       <td colspan="2" style="text-align:center"><input type="submit" name="action_add" value="Add action" class="btn btn-primary btn-lg  btn-block"/></td>
       </tr>
     <table>
 <script>
@@ -88,6 +91,9 @@ $('#id_action-action_type').ready(hide_param);
 
     {{ form_assignment.management_form }}
     <h2>Assignement</h2>
+    {% if form_assignment.non_form_errors %}
+      {{form_assignment.non_form_errors}}
+    {% endif %}
     <table class="table table-striped table-bordered">
       <tr><th>{{form_assignment.0.variable_name.label}}</th><th>{{form_assignment.0.value.label}}</th><th>{{form_assignment.0.DELETE.label}}</th></tr>
       {% for form in form_assignment %}
