@@ -23,6 +23,10 @@ from pyprocmail import procmail
 import forms
 
 def get_procmailrc(user):
+    procmailrc_path = get_procmailrc_path(user)
+    return pyprocmail.procmail.parse(procmailrc_path)
+
+def get_procmailrc_path(user):
     if settings.PROCMAIL_INPLACE:
         home = os.path.expanduser("~%s" % user.username)
         procmailrc_path = os.path.join(home, ".procmailrc")
@@ -34,10 +38,12 @@ def get_procmailrc(user):
                 shutil.copy(os.path.join(home, ".procmailrc"), procmailrc_path)
     if not os.path.isfile(procmailrc_path):
         open(procmailrc_path, 'a').close()
+    return procmailrc_path
 
-    return pyprocmail.procmail.parse(procmailrc_path)
 
-
+def set_procmailrc(user, pyprocmailrc):
+    procmailrc_path = get_procmailrc_path(user)
+    pyprocmailrc.write(procmailrc_path)
 
 class CreateStatement(SessionWizardView):
     form_list = [
@@ -86,6 +92,7 @@ class CreateStatement(SessionWizardView):
         procmailrc = get_procmailrc(self.request.user)
         if typ == "recipe":
             return do_edit_recipe(
+                self.request,
                 self.kwargs['id'],
                 None,
                 procmailrc,
@@ -96,6 +103,7 @@ class CreateStatement(SessionWizardView):
             )
         elif typ == "assignment":
             return do_edit_assignment(
+                self.request,
                 self.kwargs['id'],
                 None,
                 procmailrc,
@@ -111,6 +119,7 @@ def index(request):
 
 
 def do_edit_recipe(
+    request,
     id,
     r,
     procmailrc,
@@ -190,17 +199,17 @@ def do_edit_recipe(
                         form_action.cleaned_data['action_type']
                     )(*form_action.params)
                 if create:
-                    procmailrc.write("/home/valentin/.procmailrc")
+                    set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:create", id=id)
                 if delete:
                     r.parent.remove(r)
-                    procmailrc.write("/home/valentin/.procmailrc")
+                    set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:edit", id=".".join(id.split('.')[:-1]))
-                procmailrc.write("/home/valentin/.procmailrc")
+                set_procmailrc(request.user, procmailrc)
                 return redirect("procmail:edit", id=id)
 
 
-def do_edit_assignment(id, r, procmailrc, form_meta, form_assignment, delete=False):
+def do_edit_assignment(request, id, r, procmailrc, form_meta, form_assignment, delete=False):
             if r is None:
                 r = procmail.Assignment([])
                 r.parent = get_rule(procmailrc, id)
@@ -215,11 +224,11 @@ def do_edit_assignment(id, r, procmailrc, form_meta, form_assignment, delete=Fal
                 r.meta_comment = form_meta.cleaned_data['comment']
                 if not delete and form_assignment.variables:
                     r.variables = form_assignment.variables
-                    procmailrc.write("/home/valentin/.procmailrc")
+                    set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:edit", id=id)
                 else:
                     r.parent.remove(r)
-                    procmailrc.write("/home/valentin/.procmailrc")
+                    set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:edit", id=".".join(id.split('.')[:-1]))
 
 
@@ -272,6 +281,7 @@ def edit(request, id):
             params["form_action"] = form_action
             params["form_condition"] = form_condition
             ret = do_edit_recipe(
+                request,
                 id,
                 r,
                 procmailrc,
@@ -298,6 +308,7 @@ def edit(request, id):
             params["form_meta"] = form_meta
             params["form_assignment"] = form_assignment
             ret = do_edit_assignment(
+                request,
                 id,
                 r,
                 procmailrc,
@@ -366,7 +377,7 @@ def up_down(request, id, cur_id, op, test):
         return redirect("procmail:edit", id=cur_id)
     r[j], r[i] = r[i], r[j]
     new_id = ".".join(ids[:-1] + ["%s" % j])
-    procmailrc.write("/home/valentin/.procmailrc")
+    set_procmailrc(request.user, procmailrc)
     if not cur_id:
         return redirect("procmail:index")
     else:
