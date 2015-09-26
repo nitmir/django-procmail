@@ -3,8 +3,6 @@
 <h1>ProcmailRC Manager</h1>
 <a href="{% url "procmail:create" "" %}" class="btn btn-primary btn-lg btn-block">Add a rule</a>
 <h2> Generated procmailrc </h2>
-<pre style="overflow: inherit;">
-{{procmailrc.render}}
-</pre>
+<pre style="overflow: inherit;">{{procmailrc.render}}</pre>
 {% endblock %}}
 
