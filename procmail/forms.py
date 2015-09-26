@@ -439,7 +439,7 @@ def assignment_form_initial(assignment):
 
 def meta_form_initial(obj):
     return {
-        'title': obj.meta_title,
+        'title': obj.meta_title or obj.gen_title(),
         'comment': obj.meta_comment,
     }
 
