@@ -12,6 +12,8 @@
 from django import forms
 from django.forms.formsets import BaseFormSet, formset_factory
 
+import re
+
 from pyprocmail import procmail
 from pyprocmail.procmail import Header
 
@@ -285,6 +287,11 @@ class ConditionForm(forms.Form):
                 )
             self.params = (sign, size)
         else:
+            if self.cleaned_data["type"] == procmail.ConditionRegex.type:
+                try:
+                    re.compile(param)
+                except re.error as e:
+                    raise forms.ValidationError("Param is not a valid regular expression : %s" % e)
             self.params = (param, )
 
         if self.cleaned_data["substitute"] and self.cleaned_data["substitute_counter"] < 1:
