@@ -20,6 +20,7 @@ def set_extra(self, **kwargs):
     self.extra = kwargs
     return self
 
+unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
 
 forms.Field.set_extra = set_extra
 forms.Field.extra = {}
@@ -303,8 +304,16 @@ class AssignmentForm(forms.Form):
         if self.cleaned_data["shell"] and self.cleaned_data["value"]:
             self.cleaned_data["quote"] = "`"
         elif self.cleaned_data["value"]:
-            if "'" not in self.cleaned_data["value"]:
+            # if no space, no need of quotes
+            if unicodeSpacesSet.isdisjoint(self.cleaned_data["value"]):
+                self.cleaned_data["quote"] = None
+            # we prefer double quote
+            elif '"' not in self.cleaned_data["value"]:
+                self.cleaned_data["quote"] = '"'
+            # we prefer single quote on escaping quote
+            elif "'" not in self.cleaned_data["value"]:
                 self.cleaned_data["quote"] = "'"
+            # if we must escape anyway, we prefer double quote
             else:
                 self.cleaned_data["quote"] = '"'
         else:
