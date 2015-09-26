@@ -168,9 +168,13 @@ class HeaderForm(forms.Form, HidableFieldsForm):
 
     def clean(self):
         if not self.cleaned_data['h'] and not self.cleaned_data['b']:
-            raise forms.ValidationError("Please put at least the flag h or b or the recipe will do nothing")
+            raise forms.ValidationError(
+                "Please put at least the flag h or b or the recipe will do nothing"
+            )
         if not self.cleaned_data['H'] and not self.cleaned_data['H']:
-            raise forms.ValidationError("Please put at least the flag H or B or the recipe will nether match")
+            raise forms.ValidationError(
+                "Please put at least the flag H or B or the recipe will nether match"
+            )
 
 
 class ActionForm(forms.Form, HidableFieldsForm):
