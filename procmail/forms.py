@@ -270,7 +270,7 @@ class ConditionForm(forms.Form):
                 )
 
             sign = '<' if '<' in param else '>'
-            size = param.replace(self.sign, '').strip()
+            size = param.replace(sign, '').strip()
             try:
                 size = int(size)
             except ValueError:
@@ -335,7 +335,9 @@ def show(self, field_name):
 
     i = 0
     for form in self:
-        if form.data and form.add_prefix(field_name) in form.data:
+        if self.data and form.add_prefix(field_name) in self.data:
+            ini = form.fields[field_name].to_python(self.data[form.add_prefix(field_name)])
+        elif form.data and form.add_prefix(field_name) in form.data:
             ini = form.fields[field_name].to_python(form.data[form.add_prefix(field_name)])
         elif self.initial and len(self.initial) > i:
             ini = self.initial[i].get(field_name, form.fields[field_name].initial)
