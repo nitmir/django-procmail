@@ -70,7 +70,9 @@
       </tr>
       {% if curr_stmt.action.is_nested %}
       {% for stmt in curr_stmt %}
+      {% if not stmt.is_comment %}
       <tr><td colspan="2"><a href="{% url "procmail:edit" stmt.id %}">{% if stmt.meta_title %}{{stmt.meta_title}}{% else %}{{stmt.gen_title}}{% endif %}</a></td></tr>
+      {% endif %}
       {% endfor %}
       {% endif %}
       <tr id="action_nested">
