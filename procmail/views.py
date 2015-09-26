@@ -22,9 +22,11 @@ import pyprocmail.procmail
 from pyprocmail import procmail
 import forms
 
+
 def get_procmailrc(user):
     procmailrc_path = get_procmailrc_path(user)
     return pyprocmail.procmail.parse(procmailrc_path)
+
 
 def get_procmailrc_path(user):
     if settings.PROCMAIL_INPLACE:
@@ -44,6 +46,7 @@ def get_procmailrc_path(user):
 def set_procmailrc(user, pyprocmailrc):
     procmailrc_path = get_procmailrc_path(user)
     pyprocmailrc.write(procmailrc_path)
+
 
 class CreateStatement(SessionWizardView):
     form_list = [
