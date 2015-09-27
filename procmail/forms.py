@@ -11,8 +11,11 @@
 # (c) 2015 Valentin Samir
 from django import forms
 from django.forms.formsets import BaseFormSet, formset_factory
+from django.conf import settings
 
 import re
+import json
+import collections
 
 from pyprocmail import procmail
 from pyprocmail.procmail import Header
@@ -27,11 +30,336 @@ unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
 forms.Field.set_extra = set_extra
 forms.Field.extra = {}
 
+def oring(conditions):
+    conds = []
+    if len(conditions) <= 1:
+        return conditions
+    else:
+        for cond in conditions:
+            conds.append(procmail.ConditionScore(settings.PROCMAIL_OR_SCORE, 0, cond))
+        return conds
+
+class NonOred(ValueError):
+    pass
+def unoring(conditions):
+    conds = []
+    if len(conditions) <= 1:
+        return conditions
+    else:
+        for cond in conditions:
+            if cond.is_scoring() and cond.x == settings.PROCMAIL_OR_SCORE and cond.y == 0 and is_simple_condition(cond.condition):
+                conds.append(cond.condition)
+            else:
+                raise NonOred("%s not or condition" % cond.render())
+        return conds
+
+
+def is_simple_condition(cond):
+    if cond.is_size():
+        return True
+    elif cond.is_regex():
+        return True
+    elif cond.is_variable() and cond.condition.is_size():
+        return True
+    else:
+        return
+
+def is_simple_statement(stmt):
+    if stmt.is_assignement():
+        for _, _, quote in stmt.variables:
+            if quote == '`':
+                return False
+        return True
+    elif stmt.is_recipe():
+        if stmt.action.is_save():
+            return True
+        elif stmt.action.is_forward():
+            return len(stmt.action.recipients) == 1
+        else:
+            return False
+    else:
+        return False
 
 class MetaForm(forms.Form):
     title = forms.CharField(label='title', max_length=100)
     comment = forms.CharField(label='comment', max_length=256, required=False)
 
+
+class SimpleConditionKind(forms.Form):
+    kind = forms.ChoiceField(
+        label='',
+        widget=forms.RadioSelect,
+        choices=[
+            ("and", "matching every rules below"),
+            ("or", "matching any rules below"),
+            ("all", "all mails"),
+        ]
+    )
+
+class SimpleCondition(forms.Form):
+    object = forms.ChoiceField(
+        label='object',
+        choices=[
+            ("Subject", "Subject"),
+            ("From", "From"),
+            ("To", "To"),
+            ("custom_header", "..."),
+            ("headers", "headers"),
+            ("body", "body"),
+            ("headers_body", "headers and body"),
+        ]
+    )
+
+    custom_header = forms.CharField(label='custom header', max_length=256, required=False)
+
+    match = forms.ChoiceField(
+        label='match',
+        choices=[
+            ("contain", "contain"),
+            ("not_contain", "does not contain"),
+            ("equal", "is equal to"),
+            ("not_equal", "is differant than"),
+            ("exists", "exists"),
+            ("not_exists", "does not exists"),
+            ("regex", "match the regular expression"),
+            ("not_regex", "do not match the regular expression"),
+            ("size_g", "size strictly greater than"),
+            ("size_l", "size strictly lower than"),
+        ]
+    )
+
+    param = forms.CharField(label='parameter', max_length=256, required=False)
+
+
+    def clean_custom_header(self):
+        if ':' in self.cleaned_data["custom_header"]:
+            raise forms.ValidationError("A header name cannot contain ':'")
+        return self.cleaned_data["custom_header"].strip()
+
+    def clean(self):
+        data = self.cleaned_data
+        if data['object'] == "custom_header" and not data["custom_header"]:
+            raise forms.ValidationError("Please specify a custom header")
+        if data["match"] not in ["exists", "not_exists"] and not data["param"]:
+            raise forms.validationError("Please specify a parameter")
+        if data["match"] in ["size_g", "size_l"]:
+            try:
+                data["param"] = int(data["param"].strip())
+            except ValueError:
+                raise forms.validationError("Parameter must be a whole number of byte")
+        if data["match"] in ["regex", "not_regex"]:
+            try:
+                re.compile(data["param"])
+            except re.error as error:
+                raise forms.validationError("Bad regular expression : %s" % error)
+
+
+        flags = {}
+        if data["object"] == "body":
+            flags['B'] = True
+        elif data["object"] == "headers_body":
+            flags['H'] = True
+            flags['B'] = True
+        else:
+            flags['H'] = True
+        flags = flags.keys()
+        flags.sort()
+        self.flags = tuple(flags)
+        
+
+        if data["object"] == "Subject":
+            prefix = "^Subject:"
+        elif data["object"] == "From":
+            prefix = "^From:"
+        elif data["object"] == "To":
+            prefix = "^To:"
+        elif data["object"] == "custom_header":
+            prefix = "^%s" % re.escape(data["custom_header"])
+        else:
+            prefix = ""
+
+
+        if data["match"] in [
+            "contain", "not_contain", "equal", "not_equal",
+            "exists", "not_exists", "regex", "not_regex"
+        ]:
+            if data["match"].startswith("not_"):
+                negate = True
+                match = data["match"][4:]
+            else:
+                negate = False
+                match = data["match"]
+            if data["match"] == "contain":
+                regex = "%s.*%s.*" % (prefix, re.escape(data["param"]))
+            elif match == "equal":
+                regex = "%s[ ]*%s$" % (prefix, re.escape(data["param"]))
+            elif match == "exists":
+                regex = "%s.*" % prefix 
+            elif math == "regex":
+                regex = data["param"]
+            condition = procmail.ConditionRegex(regex)
+            if negate:
+               condition = procmail.ConditionNegate(condition)
+            self.conditions = [condition]
+        elif data["match"] in ["size_g", "size_l"]:
+            if data["match"] == "size_g":
+                sign = '>'
+            else:
+                sign = '<'
+            if prefix:
+                condition1 = procmail.ConditionRegex("%s[ ]*\/.*" % prefix)
+                condition2 = procmail.ConditionVariable(
+                    "MATCH",
+                    procmail.ConditionSize(sign, data["param"])
+                )
+                self.conditions = [condition1, condition2]
+            else:
+                condition = procmail.ConditionSize(sign, data["param"])
+                self.conditions = [condition]
+        else:
+            raise forms.ValidationError("Should not happening, contact an administrator 1")
+
+class SimpleConditionBaseSet(BaseFormSet):
+    def clean(self):
+        conditions = collections.defaultdict(list)
+        for form in self.forms:
+            conditions[form.flags].extend(form.conditions)
+        self.conditions = conditions.items()
+
+    def make_rules(self, kind, title, comment, statements):
+        conditions = self.conditions
+        if kind == "and":
+            flags, condition = conditions[0]
+            header = procmail.Header()
+            for letter in flags:
+                setattr(header, letter, True)
+            if len(statements) == 1 and statements[0].is_recipe():
+                action = statements[0].action
+            else:
+                action = procmail.ActionNested(statements)
+            recipe = procmail.Recipe(header, action, condition)
+            prof = 0
+            for flags, condition in conditions[1:]:
+                header = procmail.Header()
+                for letter in flags:
+                    setattr(header, letter, True)
+                action = procmail.ActionNested([recipe])
+                recipe = procmail.Recipe(header, action, condition)
+                prof += 1
+            recipe.meta_custom = json.dumps({"kind": "and", "prof":prof})
+            recipe.meta_title = title
+            recipe.meta_comment = comment
+            return recipe
+        elif kind == "or":
+            stmt = []
+
+            flags, condition = conditions[0]
+            header = procmail.Header()
+            for letter in flags:
+                setattr(header, letter, True)
+            if len(statements) == 1 and statements[0].is_recipe():
+                action = statements[0].action
+            else:
+                action = procmail.ActionNested(statements)
+            recipe = procmail.Recipe(header, action, oring(condition))
+            stmt.append(recipe)
+            for flags, condition in conditions[1:]:
+                header = procmail.Header()
+                for letter in flags:
+                    setattr(header, letter, True)
+                header.A = True
+                if len(statements) == 1 and statements[0].is_recipe():
+                    action = statements[0].action
+                else:
+                    action = procmail.ActionNested(statements)
+                recipe = procmail.Recipe(header, action, oring(condition))
+                stmt.append(recipe)
+            if len(stmt) == 1:
+                recipe = stmt[0]
+                multiflag = False
+            else:
+                recipe = procmail.Recipe(procmail.Header(), procmail.ActionNested(stmt))
+                multiflag = True
+            recipe.meta_custom = json.dumps({"kind": "or", 'multiflag': multiflag})
+            recipe.meta_title = title
+            recipe.meta_comment = comment
+            return recipe
+        else:
+            raise ValueError("kind should be 'or' or 'and'")
+                
+SimpleConditionSet = formset_factory(
+    SimpleCondition,
+    extra=1,
+    formset=SimpleConditionBaseSet,
+    can_delete=True
+)
+
+class SimpleAction(forms.Form):
+    action = forms.ChoiceField(
+        label='action',
+        choices=[
+            ("save", "Save mail in"),
+            ("copy", "Copy mail in"),
+            ("redirect", "Redirect mail to"),
+            ("redirect_copy", "Send a copy to"),
+            ("delete", "Delete mail"),
+            ("variable", "Define a variable"),
+        ]
+    )
+
+    param = forms.CharField(label='parameter', max_length=256, required=False)
+    variable_name = forms.CharField(label='variable name', max_length=256, required=False)
+    variable_value = forms.CharField(label='variable value', max_length=256, required=False)
+
+    def clean(self):
+        data = self.cleaned_data
+        if data['action'] in ["save", "copy", "redirect", "redirect_copy"] and not data['param']:
+            raise forms.ValidationError("Please specify a %s" % self.param.label)
+        if data['action'] == "variable" and not data["variable_name"]:
+            raise forms.ValidationError("Please specify a %s" % self.variable_name.label)
+
+        if data['action'] == "save":
+            header = procmail.Header(lockfile=True)
+            action = procmail.ActionSave(data['param'])
+            self.statement = procmail.Recipe(header, action)
+        elif data['action'] == "copy":
+            header = procmail.Header(lockfile=True)
+            header.c = True
+            action = procmail.ActionSave(data['param'])
+            self.statement = procmail.Recipe(header, action)
+        elif data['action'] == "redirect":
+            header = procmail.Header()
+            action = procmail.ActionForward([data['param']])
+            self.statement = procmail.Recipe(header, action)
+        elif data['action'] == "redirect_copy":
+            header = procmail.Header()
+            header.c = 1
+            action = procmail.ActionForward([data['param']])
+            self.statement = procmail.Recipe(header, action)
+        elif data['action'] == "delete":
+            header = procmail.Header()
+            action = procmail.ActionSave("/dev/null")
+            self.statement = procmail.Recipe(header, action)
+        elif data['action'] == "variable":
+            self.statement = procmail.Assignment(
+                [(data["variable_name"], data["variable_value"], '"')]
+            )
+        else:
+            raise forms.ValidationError("Should not happening, contact an administrator 2")
+
+
+class SimpleActionBaseSet(BaseFormSet):
+    def clean(self):
+        statements = []
+        for form in self.forms:
+            statements.append(form.statement)
+        self.statements = statements
+SimpleActionSet = formset_factory(
+    SimpleAction,
+    extra=1,
+    formset=SimpleActionBaseSet,
+    can_delete=True
+)
 
 class HidableFieldsForm(object):
     def show_init(self):
@@ -339,6 +667,7 @@ ConditionFormSet = formset_factory(ConditionForm, extra=1, can_delete=True)
 class StatementForm(forms.Form):
 
     statement = forms.ChoiceField(widget=forms.RadioSelect, choices=[
+        ('simple', 'Simple interface'),
         ('assignment', 'Assignment'),
         ('recipe', 'Recipe'),
 

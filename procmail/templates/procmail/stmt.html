@@ -1,12 +1,12 @@
 <li>{% spaceless %}
 {% if not stmt.is_first %}<a href="{% url "procmail:up" stmt.id curr_stmt.id%}" ><i title="move up" class="fa fa-caret-up"></i></a>{% endif %}
 {% if not stmt.is_last %}<a href="{% url "procmail:down" stmt.id curr_stmt.id%}" ><i title="move down" class="fa fa-caret-down"></i></a>{% endif %}
-{% if stmt.id != curr_stmt.id %}<a href="{% url "procmail:edit" stmt.id %}">{% endif %}{% spaceless %}
+{% if stmt.id != curr_stmt.id %}<a href="{% if stmt.meta_custom %}{% url "procmail:edit_simple" stmt.id %}{% else %}{% url "procmail:edit" stmt.id %}{% endif %}">{% endif %}{% spaceless %}
 <span> {% if stmt.meta_title %}{{stmt.meta_title}}{% else %}{{stmt.gen_title}}{% endif %}</span>
 {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
 {% if stmt.is_recipe and stmt.action.is_nested %}
 <ul>
-{% for s in stmt.action %}{% if not s.is_comment %}{% include "procmail/stmt.html" with stmt=s %}{% endif %}{% endfor %}
+{% for s in stmt.action %}{% if not s.is_comment and not simple %}{% include "procmail/stmt.html" with stmt=s %}{% endif %}{% endfor %}
 </ul>
 {% endif %}
 {% endspaceless %}</li>

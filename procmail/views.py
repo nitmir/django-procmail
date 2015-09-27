@@ -16,6 +16,7 @@ from django.http import Http404
 from django.contrib.formtools.wizard.views import SessionWizardView
 
 import os
+import json
 import shutil
 
 import pyprocmail.procmail
@@ -56,6 +57,9 @@ class CreateStatement(SessionWizardView):
         ("header", forms.HeaderForm),
         ("conditions", forms.ConditionFormSet),
         ("action", forms.ActionForm),
+        ("simple_condition_kind", forms.SimpleConditionKind),
+        ("simple_conditions", forms.SimpleConditionSet),
+        ("simple_actions", forms.SimpleActionSet),
     ]
 
     condition_dict = {
@@ -74,6 +78,20 @@ class CreateStatement(SessionWizardView):
         "action": (
             lambda wizard: wizard.get_cleaned_data_for_step("choose") and
             wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe"
+        ),
+        "simple_condition_kind": (
+            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == "simple"
+        ),
+        "simple_conditions": (
+            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("simple_condition_kind") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == "simple" and
+            wizard.get_cleaned_data_for_step("simple_condition_kind").get("kind") in ["and", "or"]
+        ),
+        "simple_actions": (
+            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == "simple"
         ),
     }
 
@@ -113,8 +131,30 @@ class CreateStatement(SessionWizardView):
                 form_dict["metadata"],
                 form_dict["assignment"]
             )
+        elif typ == "simple":
+             return do_simple(
+                self.request,
+                self.kwargs['id'],
+                None,
+                procmailrc,
+                form_dict["metadata"],
+                form_dict["simple_condition_kind"],
+                form_dict.get("simple_conditions"),
+                form_dict["simple_actions"]
+            )
 
-
+def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, form_action):
+    kind = form_cond_kind.cleaned_data["kind"]
+    statements = form_action.statements
+    title = form_meta.cleaned_data["title"]
+    comment = form_meta.cleaned_data["comment"]
+    if kind in ["and", "or"]:
+        r = form_cond.make_rules(kind, title, comment, statements)
+        procmailrc.append(r)
+        set_procmailrc(request.user, procmailrc)
+        return redirect("procmail:index")
+    else:
+        raise ValueError(kind)
 @login_required
 def index(request):
     procmailrc = get_procmailrc(request.user)
@@ -248,7 +288,62 @@ def get_rule(procmailrc, id):
         raise Http404()
     return r
 
+@login_required
+def edit_simple(request, id):
+    if not id:
+        return redirect("procmail:index")
+    procmailrc = get_procmailrc(request.user)
+    r = get_rule(procmailrc, id)
+    if not r.meta_custom:
+        return redirect("procmail:edit", id=id)
+    custom = json.loads(r.meta_custom)
 
+    actions = []
+    conditions = []
+    if not r.action.is_nested():
+        if not r.action.is_save() and not r.action.is_forward():
+            # not simple
+            return redirect("procmail:edit", id=id)
+        if len(r.conditions)<=1:
+            if r.conditions and not forms.is_simple_condition(r.conditions[0]):
+                # not simple
+                return redirect("procmail:edit", id=id)
+            kind = "and"
+            conditions.extend(r.conditions)
+        else:
+            kind = "or"
+            try:
+                conditions.extend(forms.unoring(r.conditions))
+            except forms.NonOred:
+                if not all(is_simple_condition(c) for c in r.conditions):
+                    # not simple
+                    return redirect("procmail:edit", id=id)
+                kind = "and"
+                conditions.extend(r.conditions)
+        actions.append(r.action)
+    else:
+        pass
+        # TODO
+        
+
+    form_meta = forms.MetaForm(initial=forms.meta_form_initial(r), prefix="meta")
+    form_cond_kind = forms.SimpleConditionKind(initial=custom, prefix="condition_kind")
+    
+    form_cond = forms.SimpleConditionSet()
+    form_action = forms.SimpleActionSet()
+
+    params = {
+        'form_meta': form_meta,
+        'form_cond_kind': form_cond_kind,
+        'form_cond': form_cond,
+        'form_action': form_action,
+        'procmailrc': procmailrc,
+        'curr_stmt': r,
+        'simple': True,
+    }
+
+    return render(request, "procmail/edit_simple.html", params)
+        
 @login_required
 def edit(request, id):
     if not id:

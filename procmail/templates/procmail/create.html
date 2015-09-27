@@ -21,7 +21,7 @@
     {{ wizard.form.management_form }}
       <tr>
       {% for field in wizard.form.0 %}
-         <th {% if not field.field.show %}class="collapse advanced_params"{% endif %}>
+         <th {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
            {{field.label}}
          </th>
       {% endfor %}
@@ -32,7 +32,7 @@
         {% endif %}
         <tr>
         {% for field in form %}
-          <td {% if not field.field.show %}class="collapse advanced_params"{% endif %}>
+          <td {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
             {{field.errors}} {{field}}
           </td>
         {% endfor %}

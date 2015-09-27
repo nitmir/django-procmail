@@ -15,7 +15,8 @@ from django.conf import settings
 
 _DEFAULTS = {
     'PROCMAIL_INPLACE': True,
-    'PROCMAIL_DEBUG_DIR': None
+    'PROCMAIL_DEBUG_DIR': None,
+    'PROCMAIL_OR_SCORE': 4294910507,
 }
 
 for key, value in list(_DEFAULTS.items()):
