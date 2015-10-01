@@ -294,43 +294,34 @@ def edit_simple(request, id):
         return redirect("procmail:index")
     procmailrc = get_procmailrc(request.user)
     r = get_rule(procmailrc, id)
-    if not r.meta_custom:
+    try:
+        initials, custom = forms.initial_simple_recipe(r)
+    except forms.NonSimple:
         return redirect("procmail:edit", id=id)
-    custom = json.loads(r.meta_custom)
 
-    actions = []
-    conditions = []
-    if not r.action.is_nested():
-        if not r.action.is_save() and not r.action.is_forward():
-            # not simple
-            return redirect("procmail:edit", id=id)
-        if len(r.conditions)<=1:
-            if r.conditions and not forms.is_simple_condition(r.conditions[0]):
-                # not simple
-                return redirect("procmail:edit", id=id)
-            kind = "and"
-            conditions.extend(r.conditions)
-        else:
-            kind = "or"
-            try:
-                conditions.extend(forms.unoring(r.conditions))
-            except forms.NonOred:
-                if not all(is_simple_condition(c) for c in r.conditions):
-                    # not simple
-                    return redirect("procmail:edit", id=id)
-                kind = "and"
-                conditions.extend(r.conditions)
-        actions.append(r.action)
+    if request.method == 'POST':        
+        form_meta = forms.MetaForm(request.POST, initial=initials['meta'], prefix="meta")
+        form_cond_kind = forms.SimpleConditionKind(request.POST, initial=initials['condition_kind'], prefix="condition_kind")
+        form_cond = forms.SimpleConditionSet(request.POST, initial=initials['conditions'], prefix="conditions")
+        form_action = forms.SimpleActionSet(request.POST, initial=initials['actions'], prefix="actions")
+
+        if all(form.is_valid() for form in [form_meta, form_cond_kind, form_cond, form_action]):
+            kind = form_cond_kind.cleaned_data["kind"]
+            statements = form_action.statements
+            title = form_meta.cleaned_data["title"]
+            comment = form_meta.cleaned_data["comment"]
+            if kind in ["and", "or"]:
+                r_new = form_cond.make_rules(kind, title, comment, statements)
+                r.parent[int(id.split('.')[-1])] = r_new
+                set_procmailrc(request.user, procmailrc)
+                return redirect("procmail:edit_simple", id=id)
+            else:
+                raise ValueError(kind)            
     else:
-        pass
-        # TODO
-        
-
-    form_meta = forms.MetaForm(initial=forms.meta_form_initial(r), prefix="meta")
-    form_cond_kind = forms.SimpleConditionKind(initial=custom, prefix="condition_kind")
-    
-    form_cond = forms.SimpleConditionSet()
-    form_action = forms.SimpleActionSet()
+        form_meta = forms.MetaForm(initial=initials['meta'], prefix="meta")
+        form_cond_kind = forms.SimpleConditionKind(initial=initials['condition_kind'], prefix="condition_kind")
+        form_cond = forms.SimpleConditionSet(initial=initials['conditions'], prefix="conditions")
+        form_action = forms.SimpleActionSet(initial=initials['actions'], prefix="actions")
 
     params = {
         'form_meta': form_meta,

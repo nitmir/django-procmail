@@ -1,0 +1,15 @@
+{% extends "procmail/base.html" %}
+{% block content %}
+<form action="" method="post">
+  {% csrf_token %}
+{% include "procmail/form.html" with form=form_meta %}
+{% include "procmail/form.html" with form=form_cond_kind %}
+{% include "procmail/form.html" with form=form_cond %}
+{% include "procmail/form.html" with form=form_action %}
+
+  <input type="submit" value="Submit" class="btn btn-primary"/>
+  <input type="submit" value="Delete" name="delete_stmt" class="btn btn-danger" style="float:right"/>
+</form>
+
+{% endblock %}
+

@@ -41,13 +41,19 @@ def oring(conditions):
 
 class NonOred(ValueError):
     pass
+
+
+class NonSimple(ValueError):
+    pass
+
+
 def unoring(conditions):
     conds = []
     if len(conditions) <= 1:
         return conditions
     else:
         for cond in conditions:
-            if cond.is_scoring() and cond.x == settings.PROCMAIL_OR_SCORE and cond.y == 0 and is_simple_condition(cond.condition):
+            if cond.is_score() and int(cond.x) == settings.PROCMAIL_OR_SCORE and int(cond.y) == 0 and is_simple_condition(cond.condition):
                 conds.append(cond.condition)
             else:
                 raise NonOred("%s not or condition" % cond.render())
@@ -65,13 +71,15 @@ def is_simple_condition(cond):
         return
 
 def is_simple_statement(stmt):
-    if stmt.is_assignement():
+    if stmt.is_assignment():
         for _, _, quote in stmt.variables:
             if quote == '`':
                 return False
         return True
     elif stmt.is_recipe():
-        if stmt.action.is_save():
+        if stmt.conditions:
+            return False
+        elif stmt.action.is_save():
             return True
         elif stmt.action.is_forward():
             return len(stmt.action.recipients) == 1
@@ -79,6 +87,121 @@ def is_simple_statement(stmt):
             return False
     else:
         return False
+
+
+def initial_simple_recipe(r):
+    if r.meta_custom:
+        custom = json.loads(r.meta_custom)
+    else:
+        custom = {}
+    kind = None
+    actions = []
+    conditions = []
+
+    if not r.action.is_nested():
+        if not r.action.is_save() and not r.action.is_forward():
+            # not simple
+            raise NonSimple()
+        if len(r.conditions)<=1:
+            if r.conditions and not is_simple_condition(r.conditions[0]):
+                # not simple
+                raise NonSimple()
+            kind = custom.get('kind', "and")
+            conditions.append((r.header.flag, r.conditions))
+        else:
+            kind = "or"
+            try:
+                conditions.append((r.header.flag, unoring(r.conditions)))
+            except NonOred:
+                if not all(is_simple_condition(c) for c in r.conditions):
+                    # not simple
+                    raise NonSimple()
+                kind = "and"
+                conditions.append((r.header.flag, r.conditions))
+        actions.append((r.header.flag, r.action))
+    else:
+        if all(is_simple_statement(stmt) for stmt in r):
+            if len(r.conditions)<=1:
+                if r.conditions and not is_simple_condition(r.conditions[0]):
+                    # not simple
+                    raise NonSimple()
+                kind = custom.get('kind', "and")
+                conditions.append((r.header.flag, r.conditions))
+            else:
+                kind = "or"
+                try:
+                    conditions.append((r.header.flag, unoring(r.conditions)))
+                except NonOred:
+                    if not all(is_simple_condition(c) for c in r.conditions):
+                        # not simple
+                        raise NonSimple()
+                    kind = "and"
+                    conditions.append((r.header.flag, r.conditions))
+            for stmt in r:
+                if stmt.is_assignment():
+                    actions.append((stmt.header.flag, stmt))
+                else:
+                    actions.append((stmt.header.flag, stmt.action))
+        else:
+            if len(r)>1:
+                kind = "or"
+                for stmt in r:
+                    if stmt.is_recipe() and stmt.action.is_nested():
+                        if not all(is_simple_statement(s) for s in stmt):
+                            raise NonSimple()
+                    elif not stmt.is_recipe() or (not stmt.action.is_save() and not stmt.action.is_forward()):
+                        raise NonSimple()
+                    try:
+                        conditions.append((stmt.header.flag, unoring(stmt.conditions)))
+                    except NonOred:
+                        raise NonSimple()
+                if not all(s.action == r[0].action for s in r):
+                    raise NonSimple()
+                if r[0].action.is_nested():
+                    for stmt in r[0].action:
+                        if stmt.is_assignment():
+                            actions.append((stmt.header.flag, stmt))
+                        else:
+                            actions.append((stmt.header.flag, stmt.action))
+                else:
+                    actions.append((r[0].header.flag, r[0].action))
+            else:
+                # len(r) == 1
+                kind = "and"
+                rr = r
+                while len(rr) == 1 and rr.is_recipe() and rr.action.is_nested():
+                    if not all(is_simple_condition(c) for c in rr.conditions):
+                        raise NonSimple()
+                    conditions.append((rr.header.flag, rr.conditions))
+                    rr = rr[0]
+                conditions.append((rr.header.flag, rr.conditions))
+                if not all(is_simple_statement(stmt) for stmt in rr):
+                    raise NonSimple()
+                for stmt in rr:
+                    if stmt.is_assignment():
+                        actions.append((stmt.header.flag, stmt))
+                    else:
+                        actions.append((stmt.header.flag, stmt.action))
+
+    meta_initial = meta_form_initial(r)
+
+    cond_kind_initial = {'kind': kind}
+
+    conditions_initial = []
+    for flag, conds in conditions:
+        for cond in conds:
+            conditions_initial.append(initial_simple_condition(flag, cond))
+
+    actions_initial = []
+    for flag, action in actions:
+        actions_initial.append(initial_simple_action(flag, action))
+    return {
+        'meta': meta_initial,
+        'condition_kind': cond_kind_initial,
+        'conditions': conditions_initial,
+        'actions': actions_initial
+    }, custom
+
 
 class MetaForm(forms.Form):
     title = forms.CharField(label='title', max_length=100)
@@ -96,10 +219,93 @@ class SimpleConditionKind(forms.Form):
         ]
     )
 
+def initial_simple_condition(flag, condition):
+    if condition.is_negate():
+        negate = True
+        condition = condition.condition
+    else:
+        negate = False
+
+    data = {}
+
+    data['object'] = None
+    if 'H' and 'B' in flag:
+        data['object'] = "headers_body"
+    elif 'B' in flag:
+        data['object'] = "body"
+
+
+    if condition.is_regex():
+        prefix = "^\^([^:]+):\[ \]\*"
+        contain = "\.\*(.+)\.\*$"
+        equal = "(.+)\$$"
+        exists = "\.\*$"
+        regex = "(.+)$"
+
+        r = re.match(prefix, condition.regex)
+        if r is not None:
+            contain = "^\^[^:]+:\[ \]\*" + contain
+            equal = "^\^[^:]+:\[ \]\*" + equal
+            exists = "^\^[^:]+:\[ \]\*" + exists
+            regex = "^\^[^:]+:\[ \]\*" + regex
+            prefix = r.group(1)
+        else:
+            contain = '^' + contain
+            equal = '^' + equal
+            exists = '^' + exists
+            regex = '^' + regex
+            prefix = None
+            
+
+        if data['object'] is None:
+            if prefix == "Subject":
+                data['object'] = "Subject"
+            elif prefix == "From":
+                data['object'] = "From"
+            elif prefix == "To":
+                data['object'] = "To"
+            elif prefix is not None:
+                data['object'] = "custom_header"
+                data["custom_header"] = prefix
+            else:
+                data['object'] = "headers"
+
+        param = None
+        for match, exp in [('contain', contain), ('equal', equal), ('exists', exists), ('regex', regex)]:
+            r = re.match(exp, condition.regex)
+            if r is not None:
+                try:
+                    param = r.group(1)
+                except IndexError:
+                    param = ""
+                break
+        assert param is not None
+        if match == 'equal':
+            for i in range(0, len(param)):
+                if not param[i] == '\\' and not param[i].isalnum():
+                    if not i>0 or not param[i-1] == '\\':
+                        match = "regex"
+                        param = param + '$'
+        if negate:
+            data['match'] = "not_%s" % match
+        else:
+            data['match'] = match
+        if match != "regex":
+            data['param'] = re.sub('\\\(.)','\\1', param)
+        else:
+            data['param'] = param
+
+        return data
+
+
 class SimpleCondition(forms.Form):
+
+    conditions = None
+
     object = forms.ChoiceField(
         label='object',
         choices=[
+            ("", ""),
             ("Subject", "Subject"),
             ("From", "From"),
             ("To", "To"),
@@ -107,7 +313,8 @@ class SimpleCondition(forms.Form):
             ("headers", "headers"),
             ("body", "body"),
             ("headers_body", "headers and body"),
-        ]
+        ],
+        required=False
     )
 
     custom_header = forms.CharField(label='custom header', max_length=256, required=False)
@@ -115,6 +322,7 @@ class SimpleCondition(forms.Form):
     match = forms.ChoiceField(
         label='match',
         choices=[
+            ("", ""),
             ("contain", "contain"),
             ("not_contain", "does not contain"),
             ("equal", "is equal to"),
@@ -125,7 +333,8 @@ class SimpleCondition(forms.Form):
             ("not_regex", "do not match the regular expression"),
             ("size_g", "size strictly greater than"),
             ("size_l", "size strictly lower than"),
-        ]
+        ],
+        required=False
     )
 
     param = forms.CharField(label='parameter', max_length=256, required=False)
@@ -138,10 +347,12 @@ class SimpleCondition(forms.Form):
 
     def clean(self):
         data = self.cleaned_data
+        if not data.get("match") or data.get('DELETE', False):
+            return
         if data['object'] == "custom_header" and not data["custom_header"]:
             raise forms.ValidationError("Please specify a custom header")
         if data["match"] not in ["exists", "not_exists"] and not data["param"]:
-            raise forms.validationError("Please specify a parameter")
+            raise forms.ValidationError("Please specify a parameter")
         if data["match"] in ["size_g", "size_l"]:
             try:
                 data["param"] = int(data["param"].strip())
@@ -168,13 +379,13 @@ class SimpleCondition(forms.Form):
         
 
         if data["object"] == "Subject":
-            prefix = "^Subject:"
+            prefix = "^Subject:[ ]*"
         elif data["object"] == "From":
-            prefix = "^From:"
+            prefix = "^From:[ ]*"
         elif data["object"] == "To":
-            prefix = "^To:"
+            prefix = "^To:[ ]*"
         elif data["object"] == "custom_header":
-            prefix = "^%s" % re.escape(data["custom_header"])
+            prefix = "^%s:[ ]*" % re.escape(data["custom_header"])
         else:
             prefix = ""
 
@@ -192,11 +403,11 @@ class SimpleCondition(forms.Form):
             if data["match"] == "contain":
                 regex = "%s.*%s.*" % (prefix, re.escape(data["param"]))
             elif match == "equal":
-                regex = "%s[ ]*%s$" % (prefix, re.escape(data["param"]))
+                regex = "%s%s$" % (prefix, re.escape(data["param"]))
             elif match == "exists":
                 regex = "%s.*" % prefix 
-            elif math == "regex":
-                regex = data["param"]
+            elif match == "regex":
+                regex = "%s%s" % (prefix, data["param"])
             condition = procmail.ConditionRegex(regex)
             if negate:
                condition = procmail.ConditionNegate(condition)
@@ -223,7 +434,10 @@ class SimpleConditionBaseSet(BaseFormSet):
     def clean(self):
         conditions = collections.defaultdict(list)
         for form in self.forms:
-            conditions[form.flags].extend(form.conditions)
+            if form.errors:
+                return
+            if form.conditions is not None:
+                conditions[form.flags].extend(form.conditions)
         self.conditions = conditions.items()
 
     def make_rules(self, kind, title, comment, statements):
@@ -294,10 +508,45 @@ SimpleConditionSet = formset_factory(
     can_delete=True
 )
 
+def initial_simple_action(flag, action):
+    data = {}
+    if action.is_statement() and action.is_assignment():
+        if len(action.variables)!=1:
+            raise RuntimeError()
+        data['action'] = "variable"
+        data['variable_name'] = action.variables[0][0]
+        data['variable_value'] = action.variables[0][1] or ""
+    elif action.is_action():
+        if action.is_save():
+            if action.path == "/dev/null":
+                data['action'] = "delete"
+            else:
+                if 'c' in flag:
+                    data['action'] = "copy"
+                else:
+                    data['action'] = "save"
+                data['param'] = action.path
+        elif action.is_forward():
+            if len(action.recipients) != 1:
+                raise RuntimeError()
+            data['param'] = action.recipients[0]
+            if 'c' in flag:
+                data['action'] = "redirect_copy"
+            else:
+                data['action'] = "redirect"
+        else:
+            raise ValueError(action)
+    else:
+        raise ValueError(action)
+    return data
+
 class SimpleAction(forms.Form):
+    statement = None
+
     action = forms.ChoiceField(
         label='action',
         choices=[
+            ("", ""),
             ("save", "Save mail in"),
             ("copy", "Copy mail in"),
             ("redirect", "Redirect mail to"),
@@ -313,6 +562,8 @@ class SimpleAction(forms.Form):
 
     def clean(self):
         data = self.cleaned_data
+        if not data['action'] or data.get('DELETE', False):
+            return
         if data['action'] in ["save", "copy", "redirect", "redirect_copy"] and not data['param']:
             raise forms.ValidationError("Please specify a %s" % self.param.label)
         if data['action'] == "variable" and not data["variable_name"]:
@@ -352,7 +603,10 @@ class SimpleActionBaseSet(BaseFormSet):
     def clean(self):
         statements = []
         for form in self.forms:
-            statements.append(form.statement)
+            if form.errors:
+                return
+            if form.statement is not None:
+                statements.append(form.statement)
         self.statements = statements
 SimpleActionSet = formset_factory(
     SimpleAction,
