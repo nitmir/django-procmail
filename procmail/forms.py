@@ -55,7 +55,12 @@ def unoring(conditions):
         return conditions
     else:
         for cond in conditions:
-            if cond.is_score() and int(cond.x) == settings.PROCMAIL_OR_SCORE and int(cond.y) == 0 and is_simple_condition(cond.condition):
+            if (
+                cond.is_score()
+                and int(cond.x) == settings.PROCMAIL_OR_SCORE
+                and int(cond.y) == 0
+                and is_simple_condition(cond.condition)
+            ):
                 conds.append(cond.condition)
             else:
                 raise NonOred("%s not or condition" % cond.render())
@@ -105,7 +110,7 @@ def initial_simple_recipe(r):
         if not r.action.is_save() and not r.action.is_forward():
             # not simple
             raise NonSimple()
-        if len(r.conditions)<=1:
+        if len(r.conditions) <= 1:
             if r.conditions and not is_simple_condition(r.conditions[0]):
                 # not simple
                 raise NonSimple()
@@ -124,7 +129,7 @@ def initial_simple_recipe(r):
         actions.append((r.header.flag, r.action))
     else:
         if all(is_simple_statement(stmt) for stmt in r):
-            if len(r.conditions)<=1:
+            if len(r.conditions) <= 1:
                 if r.conditions and not is_simple_condition(r.conditions[0]):
                     # not simple
                     raise NonSimple()
@@ -146,13 +151,16 @@ def initial_simple_recipe(r):
                 else:
                     actions.append((stmt.header.flag, stmt.action))
         else:
-            if len(r)>1:
+            if len(r) > 1:
                 kind = "or"
                 for stmt in r:
                     if stmt.is_recipe() and stmt.action.is_nested():
                         if not all(is_simple_statement(s) for s in stmt):
                             raise NonSimple()
-                    elif not stmt.is_recipe() or (not stmt.action.is_save() and not stmt.action.is_forward()):
+                    elif not stmt.is_recipe() or (
+                        not stmt.action.is_save()
+                        and not stmt.action.is_forward()
+                    ):
                         raise NonSimple()
                     try:
                         conditions.append((stmt.header.flag, unoring(stmt.conditions)))
@@ -273,7 +281,12 @@ def initial_simple_condition(flag, condition):
                 data['object'] = "headers"
 
         param = None
-        for match, exp in [('contain', contain), ('equal', equal), ('exists', exists), ('regex', regex)]:
+        for match, exp in [
+            ('contain', contain),
+            ('equal', equal),
+            ('exists', exists),
+            ('regex', regex)
+        ]:
             r = re.match(exp, condition.regex)
             if r is not None:
                 try:
@@ -285,7 +298,7 @@ def initial_simple_condition(flag, condition):
         if match == 'equal':
             for i in range(0, len(param)):
                 if not param[i] == '\\' and not param[i].isalnum():
-                    if not i>0 or not param[i-1] == '\\':
+                    if not i > 0 or not param[i-1] == '\\':
                         match = "regex"
                         param = param + '$'
         if negate:
@@ -293,7 +306,7 @@ def initial_simple_condition(flag, condition):
         else:
             data['match'] = match
         if match != "regex":
-            data['param'] = re.sub('\\\(.)','\\1', param)
+            data['param'] = re.sub('\\\(.)', '\\1', param)
         else:
             data['param'] = param
 
@@ -403,12 +416,12 @@ class SimpleCondition(forms.Form):
             elif match == "equal":
                 regex = "%s%s$" % (prefix, re.escape(data["param"]))
             elif match == "exists":
-                regex = "%s.*" % prefix 
+                regex = "%s.*" % prefix
             elif match == "regex":
                 regex = "%s%s" % (prefix, data["param"])
             condition = procmail.ConditionRegex(regex)
             if negate:
-               condition = procmail.ConditionNegate(condition)
+                condition = procmail.ConditionNegate(condition)
             self.conditions = [condition]
         elif data["match"] in ["size_g", "size_l"]:
             if data["match"] == "size_g":
@@ -458,7 +471,7 @@ class SimpleConditionBaseSet(BaseFormSet):
                 action = procmail.ActionNested([recipe])
                 recipe = procmail.Recipe(header, action, condition)
                 prof += 1
-            recipe.meta_custom = json.dumps({"kind": "and", "prof":prof})
+            recipe.meta_custom = json.dumps({"kind": "and", "prof": prof})
             recipe.meta_title = title
             recipe.meta_comment = comment
             return recipe
@@ -506,10 +519,11 @@ SimpleConditionSet = formset_factory(
     can_delete=True
 )
 
+
 def initial_simple_action(flag, action):
     data = {}
     if action.is_statement() and action.is_assignment():
-        if len(action.variables)!=1:
+        if len(action.variables) != 1:
             raise RuntimeError()
         data['action'] = "variable"
         data['variable_name'] = action.variables[0][0]

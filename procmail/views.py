@@ -131,7 +131,7 @@ class CreateStatement(SessionWizardView):
                 form_dict["assignment"]
             )
         elif typ == "simple":
-             return do_simple(
+            return do_simple(
                 self.request,
                 self.kwargs['id'],
                 None,
@@ -302,11 +302,27 @@ def edit_simple(request, id):
     except forms.NonSimple:
         return redirect("procmail:edit", id=id)
 
-    if request.method == 'POST':        
-        form_meta = forms.MetaForm(request.POST, initial=initials['meta'], prefix="meta")
-        form_cond_kind = forms.SimpleConditionKind(request.POST, initial=initials['condition_kind'], prefix="condition_kind")
-        form_cond = forms.SimpleConditionSet(request.POST, initial=initials['conditions'], prefix="conditions")
-        form_action = forms.SimpleActionSet(request.POST, initial=initials['actions'], prefix="actions")
+    if request.method == 'POST':
+        form_meta = forms.MetaForm(
+            request.POST,
+            initial=initials['meta'],
+            prefix="meta"
+        )
+        form_cond_kind = forms.SimpleConditionKind(
+            request.POST,
+            initial=initials['condition_kind'],
+            prefix="condition_kind"
+        )
+        form_cond = forms.SimpleConditionSet(
+            request.POST,
+            initial=initials['conditions'],
+            prefix="conditions"
+        )
+        form_action = forms.SimpleActionSet(
+            request.POST,
+            initial=initials['actions'],
+            prefix="actions"
+        )
 
         if all(form.is_valid() for form in [form_meta, form_cond_kind, form_cond, form_action]):
             kind = form_cond_kind.cleaned_data["kind"]
@@ -319,10 +335,13 @@ def edit_simple(request, id):
                 set_procmailrc(request.user, procmailrc)
                 return redirect("procmail:edit_simple", id=id)
             else:
-                raise ValueError(kind)            
+                raise ValueError(kind)
     else:
         form_meta = forms.MetaForm(initial=initials['meta'], prefix="meta")
-        form_cond_kind = forms.SimpleConditionKind(initial=initials['condition_kind'], prefix="condition_kind")
+        form_cond_kind = forms.SimpleConditionKind(
+            initial=initials['condition_kind'],
+            prefix="condition_kind"
+        )
         form_cond = forms.SimpleConditionSet(initial=initials['conditions'], prefix="conditions")
         form_action = forms.SimpleActionSet(initial=initials['actions'], prefix="actions")
 
