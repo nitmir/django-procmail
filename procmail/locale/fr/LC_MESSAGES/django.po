@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-02 16:31+0200\n"
-"PO-Revision-Date: 2015-10-02 16:32+0200\n"
+"POT-Creation-Date: 2015-10-02 18:49+0200\n"
+"PO-Revision-Date: 2015-10-02 18:54+0200\n"
 "Last-Translator: Valentin Samir <valentin.samir@crans.org>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -25,179 +25,217 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 1.8.4\n"
 
-#: forms.py:223
+#: forms.py:28
 msgid "title"
 msgstr "titre"
 
-#: forms.py:224
+#: forms.py:29
 msgid "comment"
 msgstr "commentaire"
 
-#: forms.py:232
+#: forms.py:37
 msgid "matching every rules below"
-msgstr "correspondant à toutes les règles suivantes"
+msgstr "valide toutes les conditions suivantes"
 
-#: forms.py:233
+#: forms.py:38
 msgid "matching any rules below"
-msgstr "valident au moins une des conditions suivantes"
+msgstr "valide au moins une des conditions suivantes"
 
-#: forms.py:234
+#: forms.py:39
 msgid "all mails"
 msgstr "tous les courriels"
 
-#: forms.py:326
+#: forms.py:49
 msgid "Scope"
 msgstr "Portée"
 
-#: forms.py:329
+#: forms.py:52
 msgid "Subject"
 msgstr "Objet"
 
-#: forms.py:330
+#: forms.py:53
 msgid "From"
 msgstr "De"
 
-#: forms.py:331
+#: forms.py:54
 msgid "To"
 msgstr "À"
 
-#: forms.py:333
+#: forms.py:56
 msgid "headers"
-msgstr "en-tête"
+msgstr "en-têtes"
 
-#: forms.py:334
+#: forms.py:57
 msgid "body"
 msgstr "corps"
 
-#: forms.py:335
+#: forms.py:58
 msgid "headers and body"
 msgstr "en-tête et corps"
 
-#: forms.py:340
+#: forms.py:63
 msgid "Custom header"
 msgstr "En-tête personalisé"
 
-#: forms.py:343
+#: forms.py:66
 msgid "Match"
 msgstr "Correspondance"
 
-#: forms.py:346
+#: forms.py:69
 msgid "contain"
 msgstr "contient"
 
-#: forms.py:347
+#: forms.py:70
 msgid "does not contain"
 msgstr "ne contient pas"
 
-#: forms.py:348
+#: forms.py:71
 msgid "is equal to"
 msgstr "est égal à"
 
-#: forms.py:349
+#: forms.py:72
 msgid "is differant than"
 msgstr "est différent de"
 
-#: forms.py:350
+#: forms.py:73
 msgid "exists"
 msgstr "existe"
 
-#: forms.py:351
+#: forms.py:74
 msgid "does not exists"
 msgstr "n'existe pas"
 
-#: forms.py:352
+#: forms.py:75
 msgid "match the regular expression"
 msgstr "correspond à l'expression rationnelle"
 
-#: forms.py:353
+#: forms.py:76
 msgid "do not match the regular expression"
 msgstr "ne correspond pas a l'expression rationnelle"
 
-#: forms.py:354
+#: forms.py:77
 msgid "size strictly greater than"
 msgstr "taille strictement plus grande que"
 
-#: forms.py:355
+#: forms.py:78
 msgid "size strictly lower than"
 msgstr "taille strictement plus petite que"
 
-#: forms.py:360 forms.py:595 forms.py:846
+#: forms.py:83 forms.py:208 forms.py:442
 msgid "Parameter"
 msgstr "Paramètre"
 
-#: forms.py:583
+#: forms.py:87
+msgid "A header name cannot contain ':'"
+msgstr "Un nom d'en-tête ne peut pas contenir ':'"
+
+#: forms.py:95
+msgid "Please specify a custom header"
+msgstr "Merci de spécifier un en-tête personnalisé"
+
+#: forms.py:97
+msgid "Please specify a parameter"
+msgstr "Merci de spécifier un paramètre"
+
+#: forms.py:102
+msgid "Parameter must be a whole number of byte"
+msgstr "Paramètre doit être un nombre entier d'octet"
+
+#: forms.py:107
+#, python-format
+msgid "Bad regular expression : %s"
+msgstr "Mauvaise expression rationnelle : %s"
+
+#: forms.py:170
+msgid "Should not happening, contact an administrator 1"
+msgstr ""
+
+#: forms.py:196 templates/procmail/edit.html:23
 msgid "Action"
 msgstr "Action"
 
-#: forms.py:586
+#: forms.py:199
 msgid "Save mail in"
 msgstr "Sauvegarder le mail dans"
 
-#: forms.py:587
+#: forms.py:200
 msgid "Copy mail in"
 msgstr "Copier le mail dans"
 
-#: forms.py:588
+#: forms.py:201
 msgid "Redirect mail to"
 msgstr "Rediriger le mail vers"
 
-#: forms.py:589
+#: forms.py:202
 msgid "Send a copy to"
 msgstr "Envoyer une copie du mail à"
 
-#: forms.py:590
+#: forms.py:203
 msgid "Delete mail"
 msgstr "Supprimer le mail"
 
-#: forms.py:591
+#: forms.py:204
 msgid "Define a variable"
 msgstr "Definir une variable"
 
-#: forms.py:596
+#: forms.py:209
 msgid "Variable name"
 msgstr "Nom de la variable"
 
-#: forms.py:597
+#: forms.py:210
 msgid "Variable value"
 msgstr "Valeur de la variable"
 
-#: forms.py:696
+#: forms.py:217 forms.py:219
+#, python-format
+msgid "Please specify a %s"
+msgstr "Merci de spécifier un %s"
+
+#: forms.py:248
+msgid "Should not happening, contact an administrator 2"
+msgstr ""
+
+#: forms.py:284
+msgid "You need at least one assignement on a assignement satement"
+msgstr "Vous devez définir au moins une assignation"
+
+#: forms.py:292
 msgid "Flag H"
 msgstr ""
 
-#: forms.py:697
+#: forms.py:293
 msgid "Condition lines examine the headers of the message."
 msgstr "Les conditions s'appliquent sur les en-tête du message."
 
-#: forms.py:702
+#: forms.py:298
 msgid "Flag B"
 msgstr ""
 
-#: forms.py:703
+#: forms.py:299
 msgid "Condition lines examine the body of the message."
 msgstr "Les conditions s'appliquent sur le corps du message."
 
-#: forms.py:708
+#: forms.py:304
 msgid "Flag h"
 msgstr ""
 
-#: forms.py:709
+#: forms.py:305
 msgid "Action line gets fed the headers of the message."
 msgstr "Les actions s'appliquent sur les en-tête du message."
 
-#: forms.py:714
+#: forms.py:310
 msgid "Flag b"
 msgstr ""
 
-#: forms.py:715
+#: forms.py:311
 msgid "Action line gets fed the body of the message."
 msgstr "Les actions s'appliquent sur le corps du message."
 
-#: forms.py:720
+#: forms.py:316
 msgid "Flag c"
 msgstr ""
 
-#: forms.py:722
+#: forms.py:318
 msgid ""
 "Clone message and execute the action(s) in a subprocess if the conditions "
 "match. The parent process continues with the original message after the clone "
@@ -206,20 +244,20 @@ msgstr ""
 "Exécuter les actions sur une copie du message. Une fois ce processus terminé, "
 "les règles suivantes sont appliqués au message original."
 
-#: forms.py:730
+#: forms.py:326
 msgid "Flag A"
 msgstr ""
 
-#: forms.py:731
+#: forms.py:327
 msgid "Execute this recipe if the previous recipe's conditions were met."
 msgstr ""
 "Exécuter cette règle si les conditions de la règle précédente étaient réunies."
 
-#: forms.py:736
+#: forms.py:332
 msgid "Flag a"
 msgstr ""
 
-#: forms.py:738
+#: forms.py:334
 msgid ""
 "Execute this recipe if the previous recipe's conditions were met and its "
 "action(s) were completed successfully."
@@ -227,21 +265,21 @@ msgstr ""
 "Exécuter cette règle si les conditions de la règle précédente étaient réunies "
 "et que ses actions se sont déroulés avec succès."
 
-#: forms.py:745
+#: forms.py:341
 msgid "Flag E"
 msgstr ""
 
-#: forms.py:746
+#: forms.py:342
 msgid "Execute this recipe if the previous recipe's conditions were not met."
 msgstr ""
 "Exécuter cette règle si les conditions de la règle précédente n'étaient pas "
 "réunies."
 
-#: forms.py:751
+#: forms.py:347
 msgid "Flag e"
 msgstr ""
 
-#: forms.py:753
+#: forms.py:349
 msgid ""
 "Execute this recipe if the previous recipe's conditions were met, but its "
 "action(s) couldn't be completed."
@@ -249,63 +287,63 @@ msgstr ""
 "Exécuter cette règle si les conditions de la règle précédente étaient réunies., "
 "mais certaines actions n'ont échoués."
 
-#: forms.py:760
+#: forms.py:356
 msgid "Flag f"
 msgstr ""
 
-#: forms.py:762
+#: forms.py:358
 msgid ""
 "Feed the message to the pipeline on the action line if the conditions are met, "
 "and continue processing with the output of the pipeline (replacing the original "
 "message)."
 msgstr ""
 
-#: forms.py:770
+#: forms.py:366
 msgid "Flag i"
 msgstr ""
 
-#: forms.py:772
+#: forms.py:368
 msgid ""
 "Suppress error checking when writing to a pipeline. This is typically used to "
 "get rid of SIGPIPE errors when the pipeline doesn't eat all of the input "
 "Procmail wants to feed it."
 msgstr ""
 
-#: forms.py:780
+#: forms.py:376
 msgid "Flag r"
 msgstr ""
 
-#: forms.py:782
+#: forms.py:378
 msgid ""
 "Raw mode: Don't do any \"fixing\" of the original message when writing it out "
 "(such as adding a final newline if the message didn't have one originally)."
 msgstr ""
 
-#: forms.py:789
+#: forms.py:385
 msgid "Flag w"
 msgstr ""
 
-#: forms.py:791
+#: forms.py:387
 msgid ""
 "Wait for the program in the action line to finish before continuing. Otherwise, "
 "Procmail will spawn off the program and leave it executing on its own."
 msgstr ""
 
-#: forms.py:798
+#: forms.py:394
 msgid "Flag W"
 msgstr ""
 
-#: forms.py:800
+#: forms.py:396
 msgid ""
 "Like w, but additionally suppresses any \"program failure\" messages from the "
 "action pipeline."
 msgstr ""
 
-#: forms.py:807
+#: forms.py:403
 msgid "Flag D"
 msgstr ""
 
-#: forms.py:809
+#: forms.py:405
 msgid ""
 "Pay attention to character case when matching: \"a\" is treated as distinct "
 "from \"A\" and so on. Some of the special macros are always matched case-"
@@ -314,123 +352,227 @@ msgstr ""
 "Être sensible a la casse: \"a\" sera traité de façon distincte de \"A\". "
 "Certaine macro spéciales seront toujours insensibles a la casse."
 
-#: forms.py:816
+#: forms.py:412
 msgid "Use a lockfile"
 msgstr "Utiliser un lock"
 
-#: forms.py:818
+#: forms.py:414
 msgid "lockfile path"
 msgstr "chemin vers le lock"
 
-#: forms.py:837
+#: forms.py:422
+msgid "Please put at least the flag h or b or the recipe will do nothing"
+msgstr ""
+
+#: forms.py:426
+msgid "Please put at least the flag H or B or the recipe will nether match"
+msgstr ""
+
+#: forms.py:433
 msgid "Action type"
 msgstr "Type d'action"
 
-#: forms.py:839
+#: forms.py:435
 msgid "Save the mail to"
 msgstr "Sauvegarder le mail dans"
 
-#: forms.py:840
+#: forms.py:436
 msgid "Forward the mail to"
 msgstr "Rediriger le mail vers"
 
-#: forms.py:841
+#: forms.py:437
 msgid "Pipe the mail to the shell"
 msgstr "Piper le mail vers une commande shell"
 
-#: forms.py:842
+#: forms.py:438
 msgid "Execute multiple rules"
 msgstr "Exécuter plusieurs règles"
 
-#: forms.py:876
+#: forms.py:451
+#, python-format
+msgid "Action %s require a parameter"
+msgstr "L'action %s requière un paramètre"
+
+#: forms.py:472
 msgid "condition type"
 msgstr "Type de condition"
 
-#: forms.py:879
+#: forms.py:475
 msgid "Pipe to the shell command and expect 0 exit code"
 msgstr ""
 "Pipe le message vers une commande shell et valide si la commande se termine "
 "avec un code 0"
 
-#: forms.py:880
+#: forms.py:476
 msgid "Is bigger or lower than x bytes"
 msgstr "Est plus grand ou moins grand que x octets"
 
-#: forms.py:881
+#: forms.py:477
 msgid "Match the regular expression"
 msgstr "Correspond a l'expression rationnelle"
 
-#: forms.py:885
+#: forms.py:481
 msgid "negate"
 msgstr "négation"
 
-#: forms.py:886
+#: forms.py:482
 msgid "parameter"
 msgstr "paramètre"
 
-#: forms.py:887
+#: forms.py:483
 msgid "substitute"
 msgstr "subtituer"
 
-#: forms.py:889
+#: forms.py:485
 msgid "substitute counter"
 msgstr "compteur de substitution"
 
-#: forms.py:893
+#: forms.py:489
 msgid "score"
 msgstr "score"
 
-#: forms.py:898
+#: forms.py:494
 msgid "score x"
 msgstr "score x"
 
-#: forms.py:900
+#: forms.py:496
 msgid "Score to add on the first match"
 msgstr "Score a ajouter lors d'une première correspondance"
 
-#: forms.py:903
+#: forms.py:499
 msgid "score y"
 msgstr "score y"
 
-#: forms.py:905
+#: forms.py:501
 msgid "Score to add on subsequent matches"
 msgstr "Score a ajouter lors de correspondances ultérieures"
 
-#: forms.py:908
+#: forms.py:504
 msgid "variable"
 msgstr "variable"
 
-#: forms.py:911
+#: forms.py:507
 msgid "Match the condition agains a variable"
 msgstr "Applique la condition a une variable"
 
-#: forms.py:914 forms.py:962
+#: forms.py:510 forms.py:558
 msgid "variable name"
 msgstr "nom de la variable"
 
-#: forms.py:963
+#: forms.py:525
+#, python-format
+msgid "Condition %s require a non null parameter"
+msgstr "La condition %s requière un paramètre"
+
+#: forms.py:531 forms.py:541
+#, python-format
+msgid "Condition %s parameter must be of the shape (<|>) number"
+msgstr "Le paramètre de la condition %s doit être de la forme (<|>) + entier"
+
+#: forms.py:550
+#, python-format
+msgid "Param is not a valid regular expression : %s"
+msgstr "Le paramètre n'est pas une expression rationnelle valide : %s"
+
+#: forms.py:554
+msgid "substitute counter must be >= 1"
+msgstr "Le compteur de substitution doit être >= 1"
+
+#: forms.py:559
 msgid "value"
 msgstr "valeur"
 
-#: forms.py:965
+#: forms.py:561
 msgid "Shell eval"
 msgstr "Évalue dans le shell"
 
-#: forms.py:966
+#: forms.py:562
 msgid "Evaluate the value in a shell and store the ouput in the variable"
 msgstr "Évalue la valeur dans un shell et stocke la sortie dans la variable"
 
-#: forms.py:1006
+#: forms.py:602
 msgid "Simple interface"
 msgstr "Interface simplifié"
 
-#: forms.py:1007
+#: forms.py:603
 msgid "Assignment"
 msgstr "Affectation"
 
-#: forms.py:1008
+#: forms.py:604 templates/procmail/edit.html:16
 msgid "Recipe"
 msgstr "Règle"
+
+#: templates/procmail/create.html:5
+msgid "Step"
+msgstr "Étape"
+
+#: templates/procmail/create.html:5
+msgid "of"
+msgstr "de"
+
+#: templates/procmail/create.html:7 templates/procmail/edit.html:9
+msgid "Show Advanced parameters"
+msgstr "Montrer les paramètres avancés"
+
+#: templates/procmail/create.html:16
+msgid "first step"
+msgstr "première étape"
+
+#: templates/procmail/create.html:17
+msgid "prev step"
+msgstr "étape précédente"
+
+#: templates/procmail/create.html:19
+msgid "submit"
+msgstr "envoyer"
+
+#: templates/procmail/edit.html:6 templates/procmail/edit_simple.html:6
+msgid "Metadata"
+msgstr "Méta-données"
+
+#: templates/procmail/edit.html:17
+msgid "Header"
+msgstr "En-tête"
+
+#: templates/procmail/edit.html:20 templates/procmail/edit_simple.html:8
+msgid "Conditions"
+msgstr "Conditions"
+
+#: templates/procmail/edit.html:43
+msgid "Add actions"
+msgstr "Ajouter une action"
+
+#: templates/procmail/edit.html:67 templates/procmail/edit_simple.html:14
+msgid "Submit"
+msgstr "Envoyer"
+
+#: templates/procmail/edit.html:68 templates/procmail/edit_simple.html:15
+msgid "Delete"
+msgstr "Supprimer"
+
+#: templates/procmail/edit.html:71
+msgid "Preview"
+msgstr "Aperçu"
+
+#: templates/procmail/edit_simple.html:11
+msgid "Actions"
+msgstr "Actions"
+
+#: templates/procmail/edit_simple.html:18
+msgid "Go to advanced edition page"
+msgstr "Aller sur la page d'édition avancée"
+
+#: templates/procmail/index.html:4
+msgid "ProcmailRC Manager"
+msgstr ""
+
+#: templates/procmail/index.html:5
+msgid "Add a rule"
+msgstr "Ajouter une règle"
+
+#: templates/procmail/index.html:6
+msgid "Generated procmailrc"
+msgstr "Procmailrc généré"
 
 #~ msgid "object"
 #~ msgstr "objet"

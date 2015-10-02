@@ -1,25 +1,26 @@
 {% extends "procmail/base.html" %}
+{% load i18n %}
 {% block content %}
 <form action="" method="post">
   {% csrf_token %}
-  <h2>Metadata</h2>
+  <h2>{% trans "Metadata" %}</h2>
   {% include "procmail/form.html" with form=form_meta %}
   <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".advanced_params">
-    Show Advanced parameters
+    {% trans "Show Advanced parameters" %}
   </button>
   {% if curr_stmt.is_recipe %}
 
 
 
 
-    <h1>Recipe</h1>
-    <h2>Header</h2>
+    <h1>{% trans "Recipe" %}</h1>
+    <h2>{% trans "Header" %}</h2>
     {% include "procmail/form.html" with form=form_header %}
 
-    <h2>Conditions</h2>
+    <h2>{% trans "Conditions" %}</h2>
     {% include "procmail/form.html" with form=form_condition %}
 
-    <h2>Action<h2>
+    <h2>{% trans "Action" %}<h2>
     {{form_action.show_init}}
     {% if form_action.non_field_errors %}
       {{form_action.non_field_errors}}
@@ -39,7 +40,7 @@
       {% endfor %}
       {% endif %}
       <tr id="action_nested">
-       <td colspan="2" style="text-align:center"><input type="submit" name="action_add" value="Add action" class="btn btn-primary btn-lg  btn-block"/></td>
+       <td colspan="2" style="text-align:center"><input type="submit" name="action_add" value="{% trans "Add actions" %}" class="btn btn-primary btn-lg  btn-block"/></td>
       </tr>
     <table>
 <script>
@@ -63,10 +64,10 @@ $('#id_action-action_type').ready(hide_param);
     {% include "procmail/form.html" with form=form_assignment %}
   {% endif %}
 
-  <input type="submit" value="Submit" class="btn btn-primary"/>
-  <input type="submit" value="Delete" name="delete_stmt" class="btn btn-danger" style="float:right"/>
+  <input type="submit" value="{% trans "Submit" %}" class="btn btn-primary"/>
+  <input type="submit" value="{% trans "Delete" %}" name="delete_stmt" class="btn btn-danger" style="float:right"/>
 </form>
 
-<h2>Preview</h2>
+<h2>{% trans "Preview" %}</h2>
 <pre>{{curr_stmt.render}}</pre>
 {% endblock %}

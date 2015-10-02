@@ -6,7 +6,7 @@
 {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
 {% if stmt.is_recipe and stmt.action.is_nested %}
 <ul>
-{% for s in stmt.action %}{% if not s.is_comment and not stmt.django.is_simple  %}{% include "procmail/stmt.html" with stmt=s %}{% endif %}{% endfor %}
+{% for s in stmt.action %}{% if not s.is_comment and not stmt.django.is_simple %}{% include "procmail/stmt.html" with stmt=s %}{% endif %}{% endfor %}
 </ul>
 {% endif %}
 {% endspaceless %}</li>

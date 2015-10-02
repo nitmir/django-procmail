@@ -84,7 +84,7 @@ class SimpleCondition(forms.Form):
 
     def clean_custom_header(self):
         if ':' in self.cleaned_data["custom_header"]:
-            raise forms.ValidationError("A header name cannot contain ':'")
+            raise forms.ValidationError(_("A header name cannot contain ':'"))
         return self.cleaned_data["custom_header"].strip()
 
     def clean(self):
@@ -92,19 +92,19 @@ class SimpleCondition(forms.Form):
         if not data.get("match") or data.get('DELETE', False):
             return
         if data['object'] == "custom_header" and not data["custom_header"]:
-            raise forms.ValidationError("Please specify a custom header")
+            raise forms.ValidationError(_("Please specify a custom header"))
         if data["match"] not in ["exists", "not_exists"] and not data["param"]:
-            raise forms.ValidationError("Please specify a parameter")
+            raise forms.ValidationError(_("Please specify a parameter"))
         if data["match"] in ["size_g", "size_l"]:
             try:
                 data["param"] = int(data["param"].strip())
             except ValueError:
-                raise forms.validationError("Parameter must be a whole number of byte")
+                raise forms.validationError(_("Parameter must be a whole number of byte"))
         if data["match"] in ["regex", "not_regex"]:
             try:
                 re.compile(data["param"])
             except re.error as error:
-                raise forms.validationError("Bad regular expression : %s" % error)
+                raise forms.validationError(_("Bad regular expression : %s") % error)
 
         flags = {}
         if data["object"] == "body":
@@ -167,7 +167,7 @@ class SimpleCondition(forms.Form):
                 condition = procmail.ConditionSize(sign, data["param"])
                 self.conditions = [condition]
         else:
-            raise forms.ValidationError("Should not happening, contact an administrator 1")
+            raise forms.ValidationError(_("Should not happening, contact an administrator 1"))
 
 
 class SimpleConditionBaseSet(BaseFormSet):
@@ -214,9 +214,9 @@ class SimpleAction(forms.Form):
         if not data['action'] or data.get('DELETE', False):
             return
         if data['action'] in ["save", "copy", "redirect", "redirect_copy"] and not data['param']:
-            raise forms.ValidationError("Please specify a %s" % self.param.label)
+            raise forms.ValidationError(_("Please specify a %s") % self.param.label)
         if data['action'] == "variable" and not data["variable_name"]:
-            raise forms.ValidationError("Please specify a %s" % self.variable_name.label)
+            raise forms.ValidationError(_("Please specify a %s") % self.variable_name.label)
 
         if data['action'] == "save":
             header = procmail.Header(lockfile=True)
@@ -245,7 +245,7 @@ class SimpleAction(forms.Form):
                 [(data["variable_name"], data["variable_value"], '"')]
             )
         else:
-            raise forms.ValidationError("Should not happening, contact an administrator 2")
+            raise forms.ValidationError(_("Should not happening, contact an administrator 2"))
 
 
 class SimpleActionBaseSet(BaseFormSet):
@@ -281,7 +281,7 @@ class AssignmentBaseFormSet(BaseFormSet):
                 )
         if not variables:
             raise forms.ValidationError(
-                "You need at least one assignement on a assignement satement"
+                _("You need at least one assignement on a assignement satement")
             )
         self.variables = variables
 
@@ -419,11 +419,11 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     def clean(self):
         if not self.cleaned_data['h'] and not self.cleaned_data['b']:
             raise forms.ValidationError(
-                "Please put at least the flag h or b or the recipe will do nothing"
+                _("Please put at least the flag h or b or the recipe will do nothing")
             )
         if not self.cleaned_data['H'] and not self.cleaned_data['H']:
             raise forms.ValidationError(
-                "Please put at least the flag H or B or the recipe will nether match"
+                _("Please put at least the flag H or B or the recipe will nether match")
             )
 
 
@@ -448,7 +448,7 @@ class ActionForm(forms.Form, utils.HidableFieldsForm):
             procmail.ActionShell.type,
         ] and not self.cleaned_data.get("action_param"):
             raise forms.ValidationError(
-                "Action %s require a parameter" % self.cleaned_data["action_type"]
+                _("Action %s require a parameter") % self.cleaned_data["action_type"]
             )
 
         if self.cleaned_data["action_type"] in [
@@ -522,14 +522,14 @@ class ConditionForm(forms.Form):
             procmail.ConditionRegex.type
         ] and not param:
             raise forms.ValidationError(
-                "Condition %s require a non null parameter" % self.cleaned_data["type"]
+                _("Condition %s require a non null parameter") % self.cleaned_data["type"]
             )
 
         if self.cleaned_data["type"] == procmail.ConditionSize.type:
             if ('<' not in param and '>' not in param) or ('<' in param and '>' in param):
                 raise forms.ValidationError(
-                    "Condition %s parameter must be of " % self.cleaned_data["type"] +
-                    "the shape (<|>) number"
+                    _("Condition %s parameter must be of "
+                    + "the shape (<|>) number") % self.cleaned_data["type"]
                 )
 
             sign = '<' if '<' in param else '>'
@@ -538,8 +538,8 @@ class ConditionForm(forms.Form):
                 size = int(size)
             except ValueError:
                 raise forms.ValidationError(
-                    "Condition %s parameter must be of " % self.cleaned_data["type"] +
-                    "the shape (<|>) number"
+                    _("Condition %s parameter must be of "
+                    + "the shape (<|>) number") % self.cleaned_data["type"]
                 )
             self.params = (sign, size)
         else:
@@ -547,11 +547,11 @@ class ConditionForm(forms.Form):
                 try:
                     re.compile(param)
                 except re.error as e:
-                    raise forms.ValidationError("Param is not a valid regular expression : %s" % e)
+                    raise forms.ValidationError(_("Param is not a valid regular expression : %s") % e)
             self.params = (param, )
 
         if self.cleaned_data["substitute"] and self.cleaned_data["substitute_counter"] < 1:
-            raise forms.ValidationError("substitute counter must be >= 1")
+            raise forms.ValidationError(_("substitute counter must be >= 1"))
 
 
 class AssignmentForm(forms.Form):
