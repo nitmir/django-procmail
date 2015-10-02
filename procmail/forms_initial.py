@@ -29,8 +29,10 @@ def simple_recipe(r):
     kind = None
     actions = []
     conditions = []
-
-    if not r.action.is_nested():
+    if r.is_assignment():
+        kind = "all"
+        actions.append(("", r))
+    elif not r.action.is_nested():
         if not r.action.is_save() and not r.action.is_forward():
             # not simple
             raise exceptions.NonSimple()
@@ -71,7 +73,7 @@ def simple_recipe(r):
                     conditions.append((r.header.flag, r.conditions))
             for stmt in r:
                 if stmt.is_assignment():
-                    actions.append((stmt.header.flag, stmt))
+                    actions.append(("", stmt))
                 else:
                     actions.append((stmt.header.flag, stmt.action))
         else:

@@ -31,7 +31,7 @@ def set_extra(self, **kwargs):
 
 def set_simple(rules):
     for r in rules:
-        if r.is_recipe():
+        if r.is_recipe() or r.is_assignment():
             try:
                 initials, custom = forms_initial.simple_recipe(r)
                 r.django = {
@@ -41,7 +41,7 @@ def set_simple(rules):
                 }
             except exceptions.NonSimple:
                 r.django = {'is_simple': False}
-            if r.action.is_nested():
+            if r.is_recipe() and r.action.is_nested():
                 set_simple(r.action)
         else:
             r.django = {'is_simple': False}
@@ -185,12 +185,16 @@ def show_init(self):
 
 def make_simple_rules(kind, title, comment, statements, conditions):
     if kind == "all":
-        header = procmail.Header()
         if len(statements) == 1 and statements[0].is_recipe():
             action = statements[0].action
+            header = procmail.Header()
+            recipe = procmail.Recipe(header, action)
+        elif len(statements) == 1 and statements[0].is_assignment():
+            recipe = statements[0]
         else:
             action = procmail.ActionNested(statements)
-        recipe = procmail.Recipe(header, action)
+            header = procmail.Header()
+            recipe = procmail.Recipe(header, action)
         recipe.meta_custom = json.dumps({"kind": "all"})
         recipe.meta_title = title
         recipe.meta_comment = comment
