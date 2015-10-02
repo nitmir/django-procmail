@@ -12,13 +12,13 @@
 from django import forms
 from django.forms.formsets import BaseFormSet, formset_factory
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 
 import re
 import json
 import collections
 
 from pyprocmail import procmail
-from pyprocmail.procmail import Header
 
 
 def set_extra(self, **kwargs):
@@ -30,6 +30,7 @@ unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
 forms.Field.set_extra = set_extra
 forms.Field.extra = {}
 
+
 def oring(conditions):
     conds = []
     if len(conditions) <= 1:
@@ -38,6 +39,7 @@ def oring(conditions):
         for cond in conditions:
             conds.append(procmail.ConditionScore(settings.PROCMAIL_OR_SCORE, 0, cond))
         return conds
+
 
 class NonOred(ValueError):
     pass
@@ -70,9 +72,10 @@ def is_simple_condition(cond):
     else:
         return
 
+
 def is_simple_statement(stmt):
     if stmt.is_assignment():
-        for _, _, quote in stmt.variables:
+        for name, value, quote in stmt.variables:
             if quote == '`':
                 return False
         return True
@@ -204,8 +207,8 @@ def initial_simple_recipe(r):
 
 
 class MetaForm(forms.Form):
-    title = forms.CharField(label='title', max_length=100)
-    comment = forms.CharField(label='comment', max_length=256, required=False)
+    title = forms.CharField(label=_('title'), max_length=100)
+    comment = forms.CharField(label=_('comment'), max_length=256, required=False)
 
 
 class SimpleConditionKind(forms.Form):
@@ -213,11 +216,12 @@ class SimpleConditionKind(forms.Form):
         label='',
         widget=forms.RadioSelect,
         choices=[
-            ("and", "matching every rules below"),
-            ("or", "matching any rules below"),
-            ("all", "all mails"),
+            ("and", _("matching every rules below")),
+            ("or", _("matching any rules below")),
+            ("all", _("all mails")),
         ]
     )
+
 
 def initial_simple_condition(flag, condition):
     if condition.is_negate():
@@ -233,7 +237,6 @@ def initial_simple_condition(flag, condition):
         data['object'] = "headers_body"
     elif 'B' in flag:
         data['object'] = "body"
-
 
     if condition.is_regex():
         prefix = "^\^([^:]+):\[ \]\*"
@@ -255,7 +258,6 @@ def initial_simple_condition(flag, condition):
             exists = '^' + exists
             regex = '^' + regex
             prefix = None
-            
 
         if data['object'] is None:
             if prefix == "Subject":
@@ -303,42 +305,41 @@ class SimpleCondition(forms.Form):
     conditions = None
 
     object = forms.ChoiceField(
-        label='object',
+        label=_('object'),
         choices=[
             ("", ""),
-            ("Subject", "Subject"),
-            ("From", "From"),
-            ("To", "To"),
+            ("Subject", _("Subject")),
+            ("From", _("From")),
+            ("To", _("To")),
             ("custom_header", "..."),
-            ("headers", "headers"),
-            ("body", "body"),
-            ("headers_body", "headers and body"),
+            ("headers", _("headers")),
+            ("body", _("body")),
+            ("headers_body", _("headers and body")),
         ],
         required=False
     )
 
-    custom_header = forms.CharField(label='custom header', max_length=256, required=False)
+    custom_header = forms.CharField(label=_('custom header'), max_length=256, required=False)
 
     match = forms.ChoiceField(
-        label='match',
+        label=_('match'),
         choices=[
             ("", ""),
-            ("contain", "contain"),
-            ("not_contain", "does not contain"),
-            ("equal", "is equal to"),
-            ("not_equal", "is differant than"),
-            ("exists", "exists"),
-            ("not_exists", "does not exists"),
-            ("regex", "match the regular expression"),
-            ("not_regex", "do not match the regular expression"),
-            ("size_g", "size strictly greater than"),
-            ("size_l", "size strictly lower than"),
+            ("contain", _("contain")),
+            ("not_contain", _("does not contain")),
+            ("equal", _("is equal to")),
+            ("not_equal", _("is differant than")),
+            ("exists", _("exists")),
+            ("not_exists", _("does not exists")),
+            ("regex", _("match the regular expression")),
+            ("not_regex", _("do not match the regular expression")),
+            ("size_g", _("size strictly greater than")),
+            ("size_l", _("size strictly lower than")),
         ],
         required=False
     )
 
-    param = forms.CharField(label='parameter', max_length=256, required=False)
-
+    param = forms.CharField(label=_('parameter'), max_length=256, required=False)
 
     def clean_custom_header(self):
         if ':' in self.cleaned_data["custom_header"]:
@@ -364,7 +365,6 @@ class SimpleCondition(forms.Form):
             except re.error as error:
                 raise forms.validationError("Bad regular expression : %s" % error)
 
-
         flags = {}
         if data["object"] == "body":
             flags['B'] = True
@@ -376,7 +376,6 @@ class SimpleCondition(forms.Form):
         flags = flags.keys()
         flags.sort()
         self.flags = tuple(flags)
-        
 
         if data["object"] == "Subject":
             prefix = "^Subject:[ ]*"
@@ -388,7 +387,6 @@ class SimpleCondition(forms.Form):
             prefix = "^%s:[ ]*" % re.escape(data["custom_header"])
         else:
             prefix = ""
-
 
         if data["match"] in [
             "contain", "not_contain", "equal", "not_equal",
@@ -540,25 +538,26 @@ def initial_simple_action(flag, action):
         raise ValueError(action)
     return data
 
+
 class SimpleAction(forms.Form):
     statement = None
 
     action = forms.ChoiceField(
-        label='action',
+        label=_('action'),
         choices=[
             ("", ""),
-            ("save", "Save mail in"),
-            ("copy", "Copy mail in"),
-            ("redirect", "Redirect mail to"),
-            ("redirect_copy", "Send a copy to"),
-            ("delete", "Delete mail"),
-            ("variable", "Define a variable"),
+            ("save", _("Save mail in")),
+            ("copy", _("Copy mail in")),
+            ("redirect", _("Redirect mail to")),
+            ("redirect_copy", _("Send a copy to")),
+            ("delete", _("Delete mail")),
+            ("variable", _("Define a variable")),
         ]
     )
 
-    param = forms.CharField(label='parameter', max_length=256, required=False)
-    variable_name = forms.CharField(label='variable name', max_length=256, required=False)
-    variable_value = forms.CharField(label='variable value', max_length=256, required=False)
+    param = forms.CharField(label=_('parameter'), max_length=256, required=False)
+    variable_name = forms.CharField(label=_('variable name'), max_length=256, required=False)
+    variable_value = forms.CharField(label=_('variable value'), max_length=256, required=False)
 
     def clean(self):
         data = self.cleaned_data
@@ -608,12 +607,15 @@ class SimpleActionBaseSet(BaseFormSet):
             if form.statement is not None:
                 statements.append(form.statement)
         self.statements = statements
+
+
 SimpleActionSet = formset_factory(
     SimpleAction,
     extra=1,
     formset=SimpleActionBaseSet,
     can_delete=True
 )
+
 
 class HidableFieldsForm(object):
     def show_init(self):
@@ -654,99 +656,129 @@ class AssignmentBaseFormSet(BaseFormSet):
 class HeaderForm(forms.Form, HidableFieldsForm):
 
     H = forms.BooleanField(
-        label="Flag H",
-        help_text=Header.H.__doc__,
+        label=_("Flag H"),
+        help_text=_("Condition lines examine the headers of the message."),
         required=False,
         initial=True
     ).set_extra(show_if_value_not=True)
     B = forms.BooleanField(
-        label="Flag B",
-        help_text=Header.B.__doc__,
+        label=_("Flag B"),
+        help_text=_("Condition lines examine the body of the message."),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     h = forms.BooleanField(
-        label="Flag h",
-        help_text=Header.h.__doc__,
+        label=_("Flag h"),
+        help_text=_("Action line gets fed the headers of the message."),
         required=False,
         initial=True
     ).set_extra(show_if_value_not=True)
     b = forms.BooleanField(
-        label="Flag b",
-        help_text=Header.b.__doc__,
+        label=_("Flag b"),
+        help_text=_("Action line gets fed the body of the message."),
         required=False,
         initial=True
     ).set_extra(show_if_value_not=True)
     c = forms.BooleanField(
-        label="Flag c",
-        help_text=Header.c.__doc__,
+        label=_("Flag c"),
+        help_text=_(
+            "Clone message and execute the action(s) in a subprocess if the"
+            + "conditions match. The parent process continues with the original"
+            + "message after the clone process finishes."
+        ),
         required=False,
         initial=False
     )
     A = forms.BooleanField(
-        label="Flag A",
-        help_text=Header.A.__doc__,
+        label=_("Flag A"),
+        help_text=_("Execute this recipe if the previous recipe's conditions were met."),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     a = forms.BooleanField(
-        label="Flag a",
-        help_text=Header.a.__doc__,
+        label=_("Flag a"),
+        help_text=_(
+            "Execute this recipe if the previous recipe's conditions were"
+            + "met and its action(s) were completed successfully."
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     E = forms.BooleanField(
-        label="Flag E",
-        help_text=Header.E.__doc__,
+        label=_("Flag E"),
+        help_text=_("Execute this recipe if the previous recipe's conditions were not met."),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     e = forms.BooleanField(
-        label="Flag e",
-        help_text=Header.e.__doc__,
+        label=_("Flag e"),
+        help_text=_(
+            "Execute this recipe if the previous recipe's conditions were met,"
+            + "but its action(s) couldn't be completed."
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     f = forms.BooleanField(
-        label="Flag f",
-        help_text=Header.f.__doc__,
+        label=_("Flag f"),
+        help_text=_(
+            "Feed the message to the pipeline on the action line if the conditions are met,"
+            + "and continue processing with the output of the pipeline"
+            + "(replacing the original message)."
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     i = forms.BooleanField(
-        label="Flag i",
-        help_text=Header.i.__doc__,
+        label=_("Flag i"),
+        help_text=_(
+            "Suppress error checking when writing to a pipeline."
+            + "This is typically used to get rid of SIGPIPE errors when the pipeline doesn't"
+            + "eat all of the input Procmail wants to feed it."
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     r = forms.BooleanField(
-        label="Flag r",
-        help_text=Header.r.__doc__,
+        label=_("Flag r"),
+        help_text=_(
+            """Raw mode: Don't do any "fixing" of the original message when writing it out"""
+            + "(such as adding a final newline if the message didn't have one originally)."
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     w = forms.BooleanField(
-        label="Flag w",
-        help_text=Header.w.__doc__,
+        label=_("Flag w"),
+        help_text=_(
+            "Wait for the program in the action line to finish before continuing."
+            + "Otherwise, Procmail will spawn off the program and leave it executing on its own."
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     W = forms.BooleanField(
-        label="Flag W",
-        help_text=Header.W.__doc__,
+        label=_("Flag W"),
+        help_text=_(
+            """Like w, but additionally suppresses any "program failure" messages"""
+            + "from the action pipeline."
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
     D = forms.BooleanField(
-        label="Flag D",
-        help_text=Header.D.__doc__,
+        label=_("Flag D"),
+        help_text=_(
+            'Pay attention to character case when matching: "a" is treated as distinct from'
+            + '"A" and so on. Some of the special macros are always matched case-insensitively.'
+        ),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
 
-    lockfile = forms.BooleanField(label="Use a lockfile", required=False, initial=False)
+    lockfile = forms.BooleanField(label=_("Use a lockfile"), required=False, initial=False)
     lockfile_path = forms.CharField(
-        label='lockfile path',
+        label=_('lockfile path'),
         max_length=256,
         required=False
     ).set_extra(show_if_value_not="")
@@ -765,16 +797,16 @@ class HeaderForm(forms.Form, HidableFieldsForm):
 class ActionForm(forms.Form, HidableFieldsForm):
 
     action_type = forms.ChoiceField(
-        label='Action type',
+        label=_('Action type'),
         choices=[
-            (procmail.ActionSave.type, "save"),
-            (procmail.ActionForward.type, "forward"),
-            (procmail.ActionShell.type, "shell"),
-            (procmail.ActionNested.type, "nested"),
+            (procmail.ActionSave.type, _("Save the mail to")),
+            (procmail.ActionForward.type, _("Forward the mail to")),
+            (procmail.ActionShell.type, _("Pipe the mail to the shell")),
+            (procmail.ActionNested.type, _("Execute multiple rules")),
         ]
     )
 
-    action_param = forms.CharField(label='Parameter', max_length=256, required=False)
+    action_param = forms.CharField(label=_('Parameter'), max_length=256, required=False)
 
     def clean(self):
         if self.cleaned_data["action_type"] in [
@@ -804,36 +836,45 @@ class ActionForm(forms.Form, HidableFieldsForm):
 
 class ConditionForm(forms.Form):
     type = forms.TypedChoiceField(
-        label='condition type',
+        label=_('condition type'),
         choices=[
             ("", ""),
-            (procmail.ConditionShell.type, "shell"),
-            (procmail.ConditionSize.type, "size"),
-            (procmail.ConditionRegex.type, "regex"),
+            (procmail.ConditionShell.type, _("Pipe the the shell command and expect 0 exit code")),
+            (procmail.ConditionSize.type, _("Is bigger or lower than x bytes")),
+            (procmail.ConditionRegex.type, _("Match the regular expression")),
         ],
         required=False,
     )
-    negate = forms.BooleanField(label="negate", required=False)
-    param = forms.CharField(label='parameter', max_length=256, required=False)
-    substitute = forms.BooleanField(label="substitute", required=False, initial=False)
+    negate = forms.BooleanField(label=_("negate"), required=False)
+    param = forms.CharField(label=_('parameter'), max_length=256, required=False)
+    substitute = forms.BooleanField(label=_("substitute"), required=False, initial=False)
     substitute_counter = forms.IntegerField(
-        label="substitute counter",
+        label=_("substitute counter"),
         initial=1
     ).set_extra(show_if_value_not=1)
     score = forms.BooleanField(
-        label="score",
+        label=_("score"),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
-    score_x = forms.IntegerField(label="score x", initial=1).set_extra(show_if_value_not=1)
-    score_y = forms.IntegerField(label="score y", initial=0).set_extra(show_if_value_not=0)
+    score_x = forms.IntegerField(
+        label=_("score x"),
+        initial=1,
+        help_text=_("Score to add on the first match")
+    ).set_extra(show_if_value_not=1)
+    score_y = forms.IntegerField(
+        label=_("score y"),
+        initial=0,
+        help_text=_("Score to add on subsequent matches")
+    ).set_extra(show_if_value_not=0)
     variable = forms.BooleanField(
-        label="variable",
+        label=_("variable"),
         required=False,
-        initial=False
+        initial=False,
+        help_text=_("Match the condition agains a variable")
     ).set_extra(show_if_value_not=False)
     variable_name = forms.CharField(
-        label='variable name',
+        label=_('variable name'),
         max_length=256,
         required=False,
         initial=""
@@ -881,10 +922,11 @@ class ConditionForm(forms.Form):
 
 
 class AssignmentForm(forms.Form):
-    variable_name = forms.CharField(label='variable name', max_length=256)
-    value = forms.CharField(label='value', max_length=256, required=False)
+    variable_name = forms.CharField(label=_('variable name'), max_length=256)
+    value = forms.CharField(label=_('value'), max_length=256, required=False)
     shell = forms.BooleanField(
-        label="Shell eval",
+        label=_("Shell eval"),
+        help_text=_("Evaluate the value in a shell and store the ouput in the variable"),
         required=False,
         initial=False
     ).set_extra(show_if_value_not=False)
@@ -921,9 +963,9 @@ ConditionFormSet = formset_factory(ConditionForm, extra=1, can_delete=True)
 class StatementForm(forms.Form):
 
     statement = forms.ChoiceField(widget=forms.RadioSelect, choices=[
-        ('simple', 'Simple interface'),
-        ('assignment', 'Assignment'),
-        ('recipe', 'Recipe'),
+        ('simple', _('Simple interface')),
+        ('assignment', _('Assignment')),
+        ('recipe', _('Recipe')),
 
 
     ])

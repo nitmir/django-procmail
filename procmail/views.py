@@ -16,7 +16,6 @@ from django.http import Http404
 from django.contrib.formtools.wizard.views import SessionWizardView
 
 import os
-import json
 import shutil
 
 import pyprocmail.procmail
@@ -143,6 +142,7 @@ class CreateStatement(SessionWizardView):
                 form_dict["simple_actions"]
             )
 
+
 def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, form_action):
     kind = form_cond_kind.cleaned_data["kind"]
     statements = form_action.statements
@@ -155,6 +155,8 @@ def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, 
         return redirect("procmail:index")
     else:
         raise ValueError(kind)
+
+
 @login_required
 def index(request):
     procmailrc = get_procmailrc(request.user)
@@ -288,6 +290,7 @@ def get_rule(procmailrc, id):
         raise Http404()
     return r
 
+
 @login_required
 def edit_simple(request, id):
     if not id:
@@ -334,7 +337,8 @@ def edit_simple(request, id):
     }
 
     return render(request, "procmail/edit_simple.html", params)
-        
+
+
 @login_required
 def edit(request, id):
     if not id:
