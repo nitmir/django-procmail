@@ -154,7 +154,7 @@ def simple_condition(flag, condition):
         data['object'] = "body"
 
     if condition.is_regex():
-        prefix = "^\^([^:]+):\[ \]\*"
+        prefix = "^\^([^:]+):(?:\[ \]\*)?"
         contain = "\.\*(.+)\.\*$"
         equal = "(.+)\$$"
         exists = "\.\*$"
