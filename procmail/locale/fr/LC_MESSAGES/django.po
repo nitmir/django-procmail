@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-02 19:10+0200\n"
-"PO-Revision-Date: 2015-10-02 19:10+0200\n"
+"POT-Creation-Date: 2015-10-02 19:43+0200\n"
+"PO-Revision-Date: 2015-10-02 19:44+0200\n"
 "Last-Translator: Valentin Samir <valentin.samir@crans.org>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -150,7 +150,7 @@ msgstr "Mauvaise expression rationnelle : %s"
 msgid "Should not happening, contact an administrator 1"
 msgstr ""
 
-#: forms.py:196 templates/procmail/edit.html:23
+#: forms.py:196 templates/procmail/edit.html:27
 msgid "Action"
 msgstr "Action"
 
@@ -498,7 +498,7 @@ msgstr "Interface simplifié"
 msgid "Assignment"
 msgstr "Affectation"
 
-#: forms.py:604 templates/procmail/edit.html:16
+#: forms.py:604 templates/procmail/edit.html:20
 msgid "Recipe"
 msgstr "Règle"
 
@@ -510,7 +510,7 @@ msgstr "Étape"
 msgid "of"
 msgstr "de"
 
-#: templates/procmail/create.html:7 templates/procmail/edit.html:9
+#: templates/procmail/create.html:7 templates/procmail/edit.html:13
 msgid "Show Advanced parameters"
 msgstr "Montrer les paramètres avancés"
 
@@ -526,39 +526,51 @@ msgstr "étape précédente"
 msgid "submit"
 msgstr "envoyer"
 
-#: templates/procmail/edit.html:6 templates/procmail/edit_simple.html:6
+#: templates/procmail/edit.html:4
+msgid "Advanced editor"
+msgstr "Éditeur avancé"
+
+#: templates/procmail/edit.html:6
+msgid "Go to the simple edition page"
+msgstr "Aller sur la page d'édition simplifié"
+
+#: templates/procmail/edit.html:10 templates/procmail/edit_simple.html:7
 msgid "Metadata"
 msgstr "Méta-données"
 
-#: templates/procmail/edit.html:17
+#: templates/procmail/edit.html:21
 msgid "Header"
 msgstr "En-tête"
 
-#: templates/procmail/edit.html:20 templates/procmail/edit_simple.html:8
+#: templates/procmail/edit.html:24 templates/procmail/edit_simple.html:9
 msgid "Conditions"
 msgstr "Conditions"
 
-#: templates/procmail/edit.html:43
+#: templates/procmail/edit.html:47
 msgid "Add actions"
 msgstr "Ajouter une action"
 
-#: templates/procmail/edit.html:67 templates/procmail/edit_simple.html:14
+#: templates/procmail/edit.html:71 templates/procmail/edit_simple.html:15
 msgid "Submit"
 msgstr "Envoyer"
 
-#: templates/procmail/edit.html:68 templates/procmail/edit_simple.html:15
+#: templates/procmail/edit.html:72 templates/procmail/edit_simple.html:16
 msgid "Delete"
 msgstr "Supprimer"
 
-#: templates/procmail/edit.html:71
+#: templates/procmail/edit.html:75
 msgid "Preview"
 msgstr "Aperçu"
 
-#: templates/procmail/edit_simple.html:11
+#: templates/procmail/edit_simple.html:4
+msgid "Simple editor"
+msgstr "Éditeur simplifié"
+
+#: templates/procmail/edit_simple.html:12
 msgid "Actions"
 msgstr "Actions"
 
-#: templates/procmail/edit_simple.html:18
+#: templates/procmail/edit_simple.html:19
 msgid "Go to advanced edition page"
 msgstr "Aller sur la page d'édition avancée"
 

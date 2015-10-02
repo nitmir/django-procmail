@@ -1,6 +1,10 @@
 {% extends "procmail/base.html" %}
 {% load i18n %}
 {% block content %}
+<h1>{% trans "Advanced editor" %}</h1>
+{% if curr_stmt.django.is_simple %}
+<a href="{% url "procmail:edit_simple" curr_stmt.id %}" class="btn btn-primary">{% trans "Go to the simple edition page" %}</a>
+{%  endif %}
 <form action="" method="post">
   {% csrf_token %}
   <h2>{% trans "Metadata" %}</h2>
@@ -13,14 +17,14 @@
 
 
 
-    <h1>{% trans "Recipe" %}</h1>
-    <h2>{% trans "Header" %}</h2>
+    <h2>{% trans "Recipe" %}</h2>
+    <h3>{% trans "Header" %}</h3>
     {% include "procmail/form.html" with form=form_header %}
 
-    <h2>{% trans "Conditions" %}</h2>
+    <h3>{% trans "Conditions" %}</h3>
     {% include "procmail/form.html" with form=form_condition %}
 
-    <h2>{% trans "Action" %}<h2>
+    <h3>{% trans "Action" %}<h3>
     {{form_action.show_init}}
     {% if form_action.non_field_errors %}
       {{form_action.non_field_errors}}
