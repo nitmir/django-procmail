@@ -101,7 +101,7 @@ def simple_recipe(r):
                 if r[0].action.is_nested():
                     for stmt in r[0].action:
                         if stmt.is_assignment():
-                            actions.append((stmt.header.flag, stmt))
+                            actions.append(("", stmt))
                         else:
                             actions.append((stmt.header.flag, stmt.action))
                 else:
@@ -110,19 +110,22 @@ def simple_recipe(r):
                 # len(r) == 1
                 kind = "and"
                 rr = r
-                while len(rr) == 1 and rr.is_recipe() and rr.action.is_nested():
+                while rr.is_recipe() and rr.action.is_nested() and len(rr) == 1:
                     if not all(utils.is_simple_condition(c) for c in rr.conditions):
                         raise exceptions.NonSimple()
                     conditions.append((rr.header.flag, rr.conditions))
                     rr = rr[0]
                 conditions.append((rr.header.flag, rr.conditions))
-                if not all(utils.is_simple_statement(stmt) for stmt in rr):
-                    raise exceptions.NonSimple()
-                for stmt in rr:
-                    if stmt.is_assignment():
-                        actions.append((stmt.header.flag, stmt))
-                    else:
-                        actions.append((stmt.header.flag, stmt.action))
+                if rr.action.is_nested():
+                    if not all(utils.is_simple_statement(stmt) for stmt in rr):
+                        raise exceptions.NonSimple()
+                    for stmt in rr:
+                        if stmt.is_assignment():
+                            actions.append(("", stmt))
+                        else:
+                            actions.append((stmt.header.flag, stmt.action))
+                else:
+                    actions.append((rr.header.flag, rr.action))
 
     meta_initial = meta_form(r)
 
