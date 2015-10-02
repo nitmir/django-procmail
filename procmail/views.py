@@ -10,62 +10,16 @@
 #
 # (c) 2015 Valentin Samir
 from django.shortcuts import render, redirect
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.contrib.formtools.wizard.views import SessionWizardView
 
-import os
-import shutil
 
-import pyprocmail.procmail
 from pyprocmail import procmail
+
 import forms
-
-
-def set_simple(rules):
-    for r in rules:
-        if r.is_recipe():
-            try:
-                initials, custom = forms.initial_simple_recipe(r)
-                r.django = {
-                    'is_simple': True,
-                    'initials': initials,
-                    'custom': custom,
-                }
-            except forms.NonSimple:
-                r.django = {'is_simple': False}
-            if r.action.is_nested():
-                set_simple(r.action)
-        else:
-            r.django = {'is_simple': False}
-
-
-def get_procmailrc(user):
-    procmailrc_path = get_procmailrc_path(user)
-    procmailrc = pyprocmail.procmail.parse(procmailrc_path)
-    set_simple(procmailrc)
-    return procmailrc
-
-
-def get_procmailrc_path(user):
-    if settings.PROCMAIL_INPLACE:
-        home = os.path.expanduser("~%s" % user.username)
-        procmailrc_path = os.path.join(home, ".procmailrc")
-    else:
-        procmailrc_path = os.path.join(settings.PROCMAIL_DEBUG_DIR, "%s.procmailrc" % user.username)
-        if not os.path.isfile(procmailrc_path):
-            home = os.path.expanduser("~%s" % user.username)
-            if os.path.isfile(os.path.join(home, ".procmailrc")):
-                shutil.copy(os.path.join(home, ".procmailrc"), procmailrc_path)
-    if not os.path.isfile(procmailrc_path):
-        open(procmailrc_path, 'a').close()
-    return procmailrc_path
-
-
-def set_procmailrc(user, pyprocmailrc):
-    procmailrc_path = get_procmailrc_path(user)
-    pyprocmailrc.write(procmailrc_path)
+import forms_initial
+import utils
 
 
 class CreateStatement(SessionWizardView):
@@ -118,7 +72,7 @@ class CreateStatement(SessionWizardView):
         return "procmail/create.html"
 
     def get_context_data(self, form, **kwargs):
-        procmailrc = get_procmailrc(self.request.user)
+        procmailrc = utils.get_procmailrc(self.request.user)
         context = super(CreateStatement, self).get_context_data(form=form, **kwargs)
         form_context = []
         for step, form in self.form_list.items():
@@ -130,7 +84,7 @@ class CreateStatement(SessionWizardView):
 
     def done(self, form_list, form_dict, **kwargs):
         typ = self.get_cleaned_data_for_step("choose")["statement"]
-        procmailrc = get_procmailrc(self.request.user)
+        procmailrc = utils.get_procmailrc(self.request.user)
         if typ == "recipe":
             return do_edit_recipe(
                 self.request,
@@ -169,7 +123,7 @@ def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, 
     statements = form_action.statements
     title = form_meta.cleaned_data["title"]
     comment = form_meta.cleaned_data["comment"]
-    r = forms.make_simple_rules(
+    r = utils.make_simple_rules(
         kind,
         title,
         comment,
@@ -177,13 +131,13 @@ def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, 
         form_cond.conditions if form_cond else None
     )
     procmailrc.append(r)
-    set_procmailrc(request.user, procmailrc)
+    utils.set_procmailrc(request.user, procmailrc)
     return redirect("procmail:index")
 
 
 @login_required
 def index(request):
-    procmailrc = get_procmailrc(request.user)
+    procmailrc = utils.get_procmailrc(request.user)
     return render(request, "procmail/index.html", {"procmailrc": procmailrc})
 
 
@@ -268,13 +222,13 @@ def do_edit_recipe(
                         form_action.cleaned_data['action_type']
                     )(*form_action.params)
                 if create:
-                    set_procmailrc(request.user, procmailrc)
+                    utils.set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:create", id=id)
                 if delete:
                     r.parent.remove(r)
-                    set_procmailrc(request.user, procmailrc)
+                    utils.set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:edit", id=".".join(id.split('.')[:-1]))
-                set_procmailrc(request.user, procmailrc)
+                utils.set_procmailrc(request.user, procmailrc)
                 return redirect("procmail:edit", id=id)
 
 
@@ -293,11 +247,11 @@ def do_edit_assignment(request, id, r, procmailrc, form_meta, form_assignment, d
                 r.meta_comment = form_meta.cleaned_data['comment']
                 if not delete and form_assignment.variables:
                     r.variables = form_assignment.variables
-                    set_procmailrc(request.user, procmailrc)
+                    utils.set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:edit", id=id)
                 else:
                     r.parent.remove(r)
-                    set_procmailrc(request.user, procmailrc)
+                    utils.set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:edit", id=".".join(id.split('.')[:-1]))
 
 
@@ -319,7 +273,7 @@ def get_rule(procmailrc, id):
 def edit_simple(request, id):
     if not id:
         return redirect("procmail:index")
-    procmailrc = get_procmailrc(request.user)
+    procmailrc = utils.get_procmailrc(request.user)
     r = get_rule(procmailrc, id)
     if not r.django['is_simple']:
         return redirect("procmail:edit", id=id)
@@ -353,7 +307,7 @@ def edit_simple(request, id):
             statements = form_action.statements
             title = form_meta.cleaned_data["title"]
             comment = form_meta.cleaned_data["comment"]
-            r_new = forms.make_simple_rules(
+            r_new = utils.make_simple_rules(
                 kind,
                 title,
                 comment,
@@ -361,7 +315,7 @@ def edit_simple(request, id):
                 form_cond.conditions if form_cond else None
             )
             r.parent[int(id.split('.')[-1])] = r_new
-            set_procmailrc(request.user, procmailrc)
+            utils.set_procmailrc(request.user, procmailrc)
             return redirect("procmail:edit_simple", id=id)
     else:
         form_meta = forms.MetaForm(initial=initials['meta'], prefix="meta")
@@ -388,7 +342,7 @@ def edit_simple(request, id):
 def edit(request, id):
     if not id:
         return redirect("procmail:index")
-    procmailrc = get_procmailrc(request.user)
+    procmailrc = utils.get_procmailrc(request.user)
     r = get_rule(procmailrc, id)
 
     params = {"procmailrc": procmailrc, "curr_stmt": r}
@@ -396,22 +350,22 @@ def edit(request, id):
         if r.is_recipe():
             form_meta = forms.MetaForm(
                 request.POST,
-                initial=forms.meta_form_initial(r),
+                initial=forms_initial.meta_form(r),
                 prefix="meta"
             )
             form_header = forms.HeaderForm(
                 request.POST,
-                initial=forms.header_form_initial(r),
+                initial=forms_initial.header_form(r),
                 prefix="header"
             )
             form_action = forms.ActionForm(
                 request.POST,
-                initial=forms.action_form_initial(r),
+                initial=forms_initial.action_form(r),
                 prefix="action"
             )
             form_condition = forms.ConditionFormSet(
                 request.POST,
-                initial=forms.conditions_form_initial(r.conditions),
+                initial=forms_initial.conditions_form(r.conditions),
                 prefix="condition"
             )
             params["form_meta"] = form_meta
@@ -435,12 +389,12 @@ def edit(request, id):
         elif r.is_assignment():
             form_meta = forms.MetaForm(
                 request.POST,
-                initial=forms.meta_form_initial(r),
+                initial=forms_initial.meta_form(r),
                 prefix="meta"
             )
             form_assignment = forms.AssignmentFormSet(
                 request.POST,
-                initial=forms.assignment_form_initial(r),
+                initial=forms_initial.assignment_form(r),
                 prefix="assignment"
             )
             params["form_meta"] = form_meta
@@ -458,11 +412,11 @@ def edit(request, id):
                 return ret
     else:
         if r.is_recipe():
-            form_meta = forms.MetaForm(initial=forms.meta_form_initial(r), prefix="meta")
-            form_header = forms.HeaderForm(initial=forms.header_form_initial(r), prefix="header")
-            form_action = forms.ActionForm(initial=forms.action_form_initial(r), prefix="action")
+            form_meta = forms.MetaForm(initial=forms_initial.meta_form(r), prefix="meta")
+            form_header = forms.HeaderForm(initial=forms_initial.header_form(r), prefix="header")
+            form_action = forms.ActionForm(initial=forms_initial.action_form(r), prefix="action")
             form_condition = forms.ConditionFormSet(
-                initial=forms.conditions_form_initial(r.conditions),
+                initial=forms_initial.conditions_form(r.conditions),
                 prefix="condition"
             )
             params["form_meta"] = form_meta
@@ -470,9 +424,9 @@ def edit(request, id):
             params["form_action"] = form_action
             params["form_condition"] = form_condition
         elif r.is_assignment():
-            form_meta = forms.MetaForm(initial=forms.meta_form_initial(r), prefix="meta")
+            form_meta = forms.MetaForm(initial=forms_initial.meta_form(r), prefix="meta")
             form_assignment = forms.AssignmentFormSet(
-                initial=forms.assignment_form_initial(r),
+                initial=forms_initial.assignment_form(r),
                 prefix="assignment"
             )
             params["form_meta"] = form_meta
@@ -493,7 +447,7 @@ def down(request, id, cur_id):
 def up_down(request, id, cur_id, op, test):
     ids = id.split('.')
 
-    procmailrc = get_procmailrc(request.user)
+    procmailrc = utils.get_procmailrc(request.user)
     r = procmailrc
     try:
         for i in ids[:-1]:
@@ -515,7 +469,7 @@ def up_down(request, id, cur_id, op, test):
         return redirect("procmail:edit", id=cur_id)
     r[j], r[i] = r[i], r[j]
     new_id = ".".join(ids[:-1] + ["%s" % j])
-    set_procmailrc(request.user, procmailrc)
+    utils.set_procmailrc(request.user, procmailrc)
     if not cur_id:
         return redirect("procmail:index")
     else:
