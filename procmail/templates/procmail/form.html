@@ -6,14 +6,13 @@
   {{form.non_form_errors}}
 {% endif %}
 <table class="table table-striped table-bordered">
-{{ management_form }}
 {{form.show_init}}
 {% if form.forms %}
     {{ form.management_form }}
       <tr>
       {% for field in form.0 %}
          <th {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
-           {{field.label}}
+           {{field.label}}{% if field.help_text %} <span title="{{ field.help_text}}" class="icon_help"><i class="fa fa-question"></i></span>{% endif %}
          </th>
       {% endfor %}
       </tr>
@@ -33,7 +32,7 @@
 {% else %}
     {% for field in form %}
       <tr {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
-        <td>{{field.label_tag}}</td><td>{{ field.errors }} {{ field }} {{ field.help_text}}</td>
+        {% if field.label %}<td>{{field.label_tag}}</td>{% endif%}<td{% if not field.label %} colspan="2"{% endif%}>{{ field.errors }} {{ field }} {{ field.help_text}}</td>
       </tr>
     {% endfor %}
 {% endif %}

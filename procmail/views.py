@@ -23,9 +23,29 @@ from pyprocmail import procmail
 import forms
 
 
+def set_simple(rules):
+    for r in rules:
+        if r.is_recipe():
+            try:
+                initials, custom = forms.initial_simple_recipe(r)
+                r.django = {
+                    'is_simple': True,
+                    'initials': initials,
+                    'custom': custom,
+                }
+            except forms.NonSimple:
+                r.django = {'is_simple': False}
+            if r.action.is_nested():
+                set_simple(r.action)
+        else:
+            r.django = {'is_simple': False}
+
+
 def get_procmailrc(user):
     procmailrc_path = get_procmailrc_path(user)
-    return pyprocmail.procmail.parse(procmailrc_path)
+    procmailrc = pyprocmail.procmail.parse(procmailrc_path)
+    set_simple(procmailrc)
+    return procmailrc
 
 
 def get_procmailrc_path(user):
@@ -98,13 +118,14 @@ class CreateStatement(SessionWizardView):
         return "procmail/create.html"
 
     def get_context_data(self, form, **kwargs):
+        procmailrc = get_procmailrc(self.request.user)
         context = super(CreateStatement, self).get_context_data(form=form, **kwargs)
         form_context = []
         for step, form in self.form_list.items():
             if self.steps.current == step:
                 break
             form_context.append(self.get_cleaned_data_for_step(step))
-        context.update({'form_data': form_context})
+        context.update({'form_data': form_context, 'procmailrc': procmailrc})
         return context
 
     def done(self, form_list, form_dict, **kwargs):
@@ -300,10 +321,10 @@ def edit_simple(request, id):
         return redirect("procmail:index")
     procmailrc = get_procmailrc(request.user)
     r = get_rule(procmailrc, id)
-    try:
-        initials, custom = forms.initial_simple_recipe(r)
-    except forms.NonSimple:
+    if not r.django['is_simple']:
         return redirect("procmail:edit", id=id)
+
+    initials = r.django['initials']
 
     if request.method == 'POST':
         form_meta = forms.MetaForm(
@@ -358,7 +379,6 @@ def edit_simple(request, id):
         'form_action': form_action,
         'procmailrc': procmailrc,
         'curr_stmt': r,
-        'simple': True,
     }
 
     return render(request, "procmail/edit_simple.html", params)
