@@ -30,6 +30,10 @@ def simple_recipe(r):
     actions = []
     conditions = []
     if r.is_assignment():
+        if len(r.variables) != 1:
+            raise exceptions.NonSimple()
+        if r.variables[0][2] == '`':
+            raise exceptions.NonSimple()
         kind = "all"
         actions.append(("", r))
     elif not r.action.is_nested():
