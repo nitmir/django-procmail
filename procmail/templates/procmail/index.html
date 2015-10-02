@@ -3,7 +3,9 @@
 {% block content %}
 <h1>{% trans "ProcmailRC Manager" %}</h1>
 <a href="{% url "procmail:create" "" %}" class="btn btn-primary btn-lg btn-block">{% trans "Add a rule" %}</a>
-<h2>{% trans "Generated procmailrc" %}</h2>
+<h2>{% trans "Generated procmailrc" %}
+<span style="float:right"><a href="{% url "procmail:download" %}" class="btn btn-primary">{% trans "Download" %}</a></span>
+</h2>
 <pre style="overflow: inherit;">{{procmailrc.render}}</pre>
 {% endblock %}}
 

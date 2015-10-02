@@ -162,10 +162,10 @@ def simple_condition(flag, condition):
 
         r = re.match(prefix, condition.regex)
         if r is not None:
-            contain = "^\^[^:]+:\[ \]\*" + contain
-            equal = "^\^[^:]+:\[ \]\*" + equal
-            exists = "^\^[^:]+:\[ \]\*" + exists
-            regex = "^\^[^:]+:\[ \]\*" + regex
+            contain = "^\^[^:]+:(?:\[ \]\*)?" + contain
+            equal = "^\^[^:]+:(?:\[ \]\*)?" + equal
+            exists = "^\^[^:]+:(?:\[ \]\*)?" + exists
+            regex = "^\^[^:]+:(?:\[ \]\*)?" + regex
             prefix = r.group(1)
         else:
             contain = '^' + contain

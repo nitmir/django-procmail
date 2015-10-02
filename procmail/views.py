@@ -11,9 +11,8 @@
 # (c) 2015 Valentin Samir
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.contrib.formtools.wizard.views import SessionWizardView
-
 
 from pyprocmail import procmail
 
@@ -139,6 +138,12 @@ def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, 
 def index(request):
     procmailrc = utils.get_procmailrc(request.user)
     return render(request, "procmail/index.html", {"procmailrc": procmailrc})
+
+
+@login_required
+def download(request):
+    procmailrc = utils.get_procmailrc(request.user)
+    return HttpResponse(procmailrc.render().encode("utf-8"), content_type="text/plain; charset=utf-8")
 
 
 def do_edit_recipe(
