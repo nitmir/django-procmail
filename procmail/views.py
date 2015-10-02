@@ -148,13 +148,16 @@ def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, 
     statements = form_action.statements
     title = form_meta.cleaned_data["title"]
     comment = form_meta.cleaned_data["comment"]
-    if kind in ["and", "or"]:
-        r = form_cond.make_rules(kind, title, comment, statements)
-        procmailrc.append(r)
-        set_procmailrc(request.user, procmailrc)
-        return redirect("procmail:index")
-    else:
-        raise ValueError(kind)
+    r = forms.make_simple_rules(
+        kind,
+        title,
+        comment,
+        statements,
+        form_cond.conditions if form_cond else None
+    )
+    procmailrc.append(r)
+    set_procmailrc(request.user, procmailrc)
+    return redirect("procmail:index")
 
 
 @login_required
@@ -329,13 +332,16 @@ def edit_simple(request, id):
             statements = form_action.statements
             title = form_meta.cleaned_data["title"]
             comment = form_meta.cleaned_data["comment"]
-            if kind in ["and", "or"]:
-                r_new = form_cond.make_rules(kind, title, comment, statements)
-                r.parent[int(id.split('.')[-1])] = r_new
-                set_procmailrc(request.user, procmailrc)
-                return redirect("procmail:edit_simple", id=id)
-            else:
-                raise ValueError(kind)
+            r_new = forms.make_simple_rules(
+                kind,
+                title,
+                comment,
+                statements,
+                form_cond.conditions if form_cond else None
+            )
+            r.parent[int(id.split('.')[-1])] = r_new
+            set_procmailrc(request.user, procmailrc)
+            return redirect("procmail:edit_simple", id=id)
     else:
         form_meta = forms.MetaForm(initial=initials['meta'], prefix="meta")
         form_cond_kind = forms.SimpleConditionKind(

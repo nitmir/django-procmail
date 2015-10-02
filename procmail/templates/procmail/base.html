@@ -16,7 +16,7 @@ th.collapse.in, td.collapse.in {
 
 <table>
 <tr>
-<td style="vertical-align:top">
+<td style="vertical-align:top;min-width:100px;padding-right:10px">
 {% if procmailrc %}
 <ul>
 {% for stmt in procmailrc %}{% if not stmt.is_comment %}{% include "procmail/stmt.html" with stmt=stmt %}{% endif %}{% endfor %}

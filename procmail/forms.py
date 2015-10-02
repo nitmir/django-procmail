@@ -99,7 +99,12 @@ def is_simple_statement(stmt):
 
 def initial_simple_recipe(r):
     if r.meta_custom:
-        custom = json.loads(r.meta_custom)
+        try:
+            custom = json.loads(r.meta_custom)
+            if not isinstance(custom, dict):
+                custom = {}
+        except ValueError:
+            custom = {}
     else:
         custom = {}
     kind = None
@@ -441,23 +446,27 @@ class SimpleCondition(forms.Form):
         else:
             raise forms.ValidationError("Should not happening, contact an administrator 1")
 
-class SimpleConditionBaseSet(BaseFormSet):
-    def clean(self):
-        conditions = collections.defaultdict(list)
-        for form in self.forms:
-            if form.errors:
-                return
-            if form.conditions is not None:
-                conditions[form.flags].extend(form.conditions)
-        self.conditions = conditions.items()
 
-    def make_rules(self, kind, title, comment, statements):
-        conditions = self.conditions
-        if kind == "and":
-            flags, condition = conditions[0]
+def make_simple_rules(kind, title, comment, statements, conditions):
+        if kind == "all":
             header = procmail.Header()
-            for letter in flags:
-                setattr(header, letter, True)
+            if len(statements) == 1 and statements[0].is_recipe():
+                action = statements[0].action
+            else:
+                action = procmail.ActionNested(statements)
+            recipe = procmail.Recipe(header, action)
+            recipe.meta_custom = json.dumps({"kind": "all"})
+            recipe.meta_title = title
+            recipe.meta_comment = comment
+            return recipe
+        elif kind == "and":
+            header = procmail.Header()
+            if conditions:
+                flags, condition = conditions[0]
+                for letter in flags:
+                    setattr(header, letter, True)
+            else:
+                condition = []
             if len(statements) == 1 and statements[0].is_recipe():
                 action = statements[0].action
             else:
@@ -471,17 +480,19 @@ class SimpleConditionBaseSet(BaseFormSet):
                 action = procmail.ActionNested([recipe])
                 recipe = procmail.Recipe(header, action, condition)
                 prof += 1
-            recipe.meta_custom = json.dumps({"kind": "and", "prof": prof})
+            recipe.meta_custom = json.dumps({"kind": "and"})
             recipe.meta_title = title
             recipe.meta_comment = comment
             return recipe
         elif kind == "or":
             stmt = []
-
-            flags, condition = conditions[0]
             header = procmail.Header()
-            for letter in flags:
-                setattr(header, letter, True)
+            if conditions:
+                flags, condition = conditions[0]
+                for letter in flags:
+                    setattr(header, letter, True)
+            else:
+                condition = []
             if len(statements) == 1 and statements[0].is_recipe():
                 action = statements[0].action
             else:
@@ -505,13 +516,25 @@ class SimpleConditionBaseSet(BaseFormSet):
             else:
                 recipe = procmail.Recipe(procmail.Header(), procmail.ActionNested(stmt))
                 multiflag = True
-            recipe.meta_custom = json.dumps({"kind": "or", 'multiflag': multiflag})
+            recipe.meta_custom = json.dumps({"kind": "or"})
             recipe.meta_title = title
             recipe.meta_comment = comment
             return recipe
         else:
-            raise ValueError("kind should be 'or' or 'and'")
-                
+            raise ValueError("kind should be 'or' or 'and' or 'all'")
+
+
+class SimpleConditionBaseSet(BaseFormSet):
+    def clean(self):
+        conditions = collections.defaultdict(list)
+        for form in self.forms:
+            if form.errors:
+                return
+            if form.conditions is not None:
+                conditions[form.flags].extend(form.conditions)
+        self.conditions = conditions.items()
+
+
 SimpleConditionSet = formset_factory(
     SimpleCondition,
     extra=1,
@@ -696,8 +719,8 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     c = forms.BooleanField(
         label=_("Flag c"),
         help_text=_(
-            "Clone message and execute the action(s) in a subprocess if the"
-            + "conditions match. The parent process continues with the original"
+            "Clone message and execute the action(s) in a subprocess if the "
+            + "conditions match. The parent process continues with the original "
             + "message after the clone process finishes."
         ),
         required=False,
@@ -712,7 +735,7 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     a = forms.BooleanField(
         label=_("Flag a"),
         help_text=_(
-            "Execute this recipe if the previous recipe's conditions were"
+            "Execute this recipe if the previous recipe's conditions were "
             + "met and its action(s) were completed successfully."
         ),
         required=False,
@@ -727,7 +750,7 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     e = forms.BooleanField(
         label=_("Flag e"),
         help_text=_(
-            "Execute this recipe if the previous recipe's conditions were met,"
+            "Execute this recipe if the previous recipe's conditions were met, "
             + "but its action(s) couldn't be completed."
         ),
         required=False,
@@ -736,8 +759,8 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     f = forms.BooleanField(
         label=_("Flag f"),
         help_text=_(
-            "Feed the message to the pipeline on the action line if the conditions are met,"
-            + "and continue processing with the output of the pipeline"
+            "Feed the message to the pipeline on the action line if the conditions are met, "
+            + "and continue processing with the output of the pipeline "
             + "(replacing the original message)."
         ),
         required=False,
@@ -746,8 +769,8 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     i = forms.BooleanField(
         label=_("Flag i"),
         help_text=_(
-            "Suppress error checking when writing to a pipeline."
-            + "This is typically used to get rid of SIGPIPE errors when the pipeline doesn't"
+            "Suppress error checking when writing to a pipeline. "
+            + "This is typically used to get rid of SIGPIPE errors when the pipeline doesn't "
             + "eat all of the input Procmail wants to feed it."
         ),
         required=False,
@@ -756,7 +779,7 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     r = forms.BooleanField(
         label=_("Flag r"),
         help_text=_(
-            """Raw mode: Don't do any "fixing" of the original message when writing it out"""
+            """Raw mode: Don't do any "fixing" of the original message when writing it out """
             + "(such as adding a final newline if the message didn't have one originally)."
         ),
         required=False,
@@ -765,7 +788,7 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     w = forms.BooleanField(
         label=_("Flag w"),
         help_text=_(
-            "Wait for the program in the action line to finish before continuing."
+            "Wait for the program in the action line to finish before continuing. "
             + "Otherwise, Procmail will spawn off the program and leave it executing on its own."
         ),
         required=False,
@@ -774,7 +797,7 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     W = forms.BooleanField(
         label=_("Flag W"),
         help_text=_(
-            """Like w, but additionally suppresses any "program failure" messages"""
+            """Like w, but additionally suppresses any "program failure" messages """
             + "from the action pipeline."
         ),
         required=False,
@@ -783,7 +806,7 @@ class HeaderForm(forms.Form, HidableFieldsForm):
     D = forms.BooleanField(
         label=_("Flag D"),
         help_text=_(
-            'Pay attention to character case when matching: "a" is treated as distinct from'
+            'Pay attention to character case when matching: "a" is treated as distinct from '
             + '"A" and so on. Some of the special macros are always matched case-insensitively.'
         ),
         required=False,
@@ -853,7 +876,7 @@ class ConditionForm(forms.Form):
         label=_('condition type'),
         choices=[
             ("", ""),
-            (procmail.ConditionShell.type, _("Pipe the the shell command and expect 0 exit code")),
+            (procmail.ConditionShell.type, _("Pipe to the shell command and expect 0 exit code")),
             (procmail.ConditionSize.type, _("Is bigger or lower than x bytes")),
             (procmail.ConditionRegex.type, _("Match the regular expression")),
         ],

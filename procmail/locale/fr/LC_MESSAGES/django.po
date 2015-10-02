@@ -1,0 +1,425 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-10-02 15:03+0200\n"
+"PO-Revision-Date: 2015-10-02 15:08+0200\n"
+"Last-Translator: Valentin Samir <valentin.samir@crans.org>\n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 1.8.4\n"
+
+#: forms.py:223
+msgid "title"
+msgstr "titre"
+
+#: forms.py:224
+msgid "comment"
+msgstr "commentaire"
+
+#: forms.py:232
+msgid "matching every rules below"
+msgstr "correspondant à toutes les règles suivantes"
+
+#: forms.py:233
+msgid "matching any rules below"
+msgstr "valident au moins une des conditions suivantes"
+
+#: forms.py:234
+msgid "all mails"
+msgstr "tous les courriels"
+
+#: forms.py:326
+msgid "object"
+msgstr "objet"
+
+#: forms.py:329
+msgid "Subject"
+msgstr "Objet"
+
+#: forms.py:330
+msgid "From"
+msgstr "De"
+
+#: forms.py:331
+msgid "To"
+msgstr "À"
+
+#: forms.py:333
+msgid "headers"
+msgstr "en-tête"
+
+#: forms.py:334
+msgid "body"
+msgstr "corps"
+
+#: forms.py:335
+msgid "headers and body"
+msgstr "en-tête et corps"
+
+#: forms.py:340
+msgid "custom header"
+msgstr "en-tête personalisé"
+
+#: forms.py:343
+msgid "match"
+msgstr "correspondance"
+
+#: forms.py:346
+msgid "contain"
+msgstr "contient"
+
+#: forms.py:347
+msgid "does not contain"
+msgstr "ne contient pas"
+
+#: forms.py:348
+msgid "is equal to"
+msgstr "est égal à"
+
+#: forms.py:349
+msgid "is differant than"
+msgstr "est différent de"
+
+#: forms.py:350
+msgid "exists"
+msgstr "existe"
+
+#: forms.py:351
+msgid "does not exists"
+msgstr "n'existe pas"
+
+#: forms.py:352
+msgid "match the regular expression"
+msgstr "correspond à l'expression rationnelle"
+
+#: forms.py:353
+msgid "do not match the regular expression"
+msgstr "ne correspond pas a l'expression rationnelle"
+
+#: forms.py:354
+msgid "size strictly greater than"
+msgstr "taille strictement plus grande que"
+
+#: forms.py:355
+msgid "size strictly lower than"
+msgstr "taille strictement plus petite que"
+
+#: forms.py:360 forms.py:595 forms.py:886
+msgid "parameter"
+msgstr "paramètre"
+
+#: forms.py:583
+msgid "action"
+msgstr "action"
+
+#: forms.py:586
+msgid "Save mail in"
+msgstr "Sauvegarder le mail dans"
+
+#: forms.py:587
+msgid "Copy mail in"
+msgstr "Copier le mail dans"
+
+#: forms.py:588
+msgid "Redirect mail to"
+msgstr "Rediriger le mail vers"
+
+#: forms.py:589
+msgid "Send a copy to"
+msgstr "Envoyer une copie du mail à"
+
+#: forms.py:590
+msgid "Delete mail"
+msgstr "Supprimer le mail"
+
+#: forms.py:591
+msgid "Define a variable"
+msgstr "Definir une variable"
+
+#: forms.py:596 forms.py:914 forms.py:962
+msgid "variable name"
+msgstr "nom de la variable"
+
+#: forms.py:597
+msgid "variable value"
+msgstr "valeur de la variable"
+
+#: forms.py:696
+msgid "Flag H"
+msgstr ""
+
+#: forms.py:697
+msgid "Condition lines examine the headers of the message."
+msgstr "Les conditions s'appliquent sur les en-tête du message."
+
+#: forms.py:702
+msgid "Flag B"
+msgstr ""
+
+#: forms.py:703
+msgid "Condition lines examine the body of the message."
+msgstr "Les conditions s'appliquent sur le corps du message."
+
+#: forms.py:708
+msgid "Flag h"
+msgstr ""
+
+#: forms.py:709
+msgid "Action line gets fed the headers of the message."
+msgstr "Les actions s'appliquent sur les en-tête du message."
+
+#: forms.py:714
+msgid "Flag b"
+msgstr ""
+
+#: forms.py:715
+msgid "Action line gets fed the body of the message."
+msgstr "Les actions s'appliquent sur le corps du message."
+
+#: forms.py:720
+msgid "Flag c"
+msgstr ""
+
+#: forms.py:722
+msgid ""
+"Clone message and execute the action(s) in a subprocess if the conditions "
+"match. The parent process continues with the original message after the "
+"clone process finishes."
+msgstr ""
+"Exécuter les actions sur une copie du message. Une fois ce processus "
+"terminé, les règles suivantes sont appliqués au message original."
+
+#: forms.py:730
+msgid "Flag A"
+msgstr ""
+
+#: forms.py:731
+msgid "Execute this recipe if the previous recipe's conditions were met."
+msgstr ""
+"Exécuter cette règle si les conditions de la règle précédente étaient "
+"réunies."
+
+#: forms.py:736
+msgid "Flag a"
+msgstr ""
+
+#: forms.py:738
+msgid ""
+"Execute this recipe if the previous recipe's conditions were met and its "
+"action(s) were completed successfully."
+msgstr ""
+"Exécuter cette règle si les conditions de la règle précédente étaient "
+"réunies et que ses actions se sont déroulés avec succès."
+
+#: forms.py:745
+msgid "Flag E"
+msgstr ""
+
+#: forms.py:746
+msgid "Execute this recipe if the previous recipe's conditions were not met."
+msgstr ""
+"Exécuter cette règle si les conditions de la règle précédente n'étaient pas "
+"réunies."
+
+#: forms.py:751
+msgid "Flag e"
+msgstr ""
+
+#: forms.py:753
+msgid ""
+"Execute this recipe if the previous recipe's conditions were met, but its "
+"action(s) couldn't be completed."
+msgstr ""
+"Exécuter cette règle si les conditions de la règle précédente étaient "
+"réunies., mais certaines actions n'ont échoués."
+
+#: forms.py:760
+msgid "Flag f"
+msgstr ""
+
+#: forms.py:762
+msgid ""
+"Feed the message to the pipeline on the action line if the conditions are "
+"met, and continue processing with the output of the pipeline (replacing the "
+"original message)."
+msgstr ""
+
+#: forms.py:770
+msgid "Flag i"
+msgstr ""
+
+#: forms.py:772
+msgid ""
+"Suppress error checking when writing to a pipeline. This is typically used "
+"to get rid of SIGPIPE errors when the pipeline doesn't eat all of the input "
+"Procmail wants to feed it."
+msgstr ""
+
+#: forms.py:780
+msgid "Flag r"
+msgstr ""
+
+#: forms.py:782
+msgid ""
+"Raw mode: Don't do any \"fixing\" of the original message when writing it "
+"out (such as adding a final newline if the message didn't have one "
+"originally)."
+msgstr ""
+
+#: forms.py:789
+msgid "Flag w"
+msgstr ""
+
+#: forms.py:791
+msgid ""
+"Wait for the program in the action line to finish before continuing. "
+"Otherwise, Procmail will spawn off the program and leave it executing on its "
+"own."
+msgstr ""
+
+#: forms.py:798
+msgid "Flag W"
+msgstr ""
+
+#: forms.py:800
+msgid ""
+"Like w, but additionally suppresses any \"program failure\" messages from "
+"the action pipeline."
+msgstr ""
+
+#: forms.py:807
+msgid "Flag D"
+msgstr ""
+
+#: forms.py:809
+msgid ""
+"Pay attention to character case when matching: \"a\" is treated as distinct "
+"from \"A\" and so on. Some of the special macros are always matched case-"
+"insensitively."
+msgstr ""
+"Être sensible a la casse: \"a\" sera traité de façon distincte de \"A\". "
+"Certaine macro spéciales seront toujours insensibles a la casse."
+
+#: forms.py:816
+msgid "Use a lockfile"
+msgstr "Utiliser un lock"
+
+#: forms.py:818
+msgid "lockfile path"
+msgstr "chemin vers le lock"
+
+#: forms.py:837
+msgid "Action type"
+msgstr "Type d'action"
+
+#: forms.py:839
+msgid "Save the mail to"
+msgstr "Sauvegarder le mail dans"
+
+#: forms.py:840
+msgid "Forward the mail to"
+msgstr "Rediriger le mail vers"
+
+#: forms.py:841
+msgid "Pipe the mail to the shell"
+msgstr "Piper le mail vers une commande shell"
+
+#: forms.py:842
+msgid "Execute multiple rules"
+msgstr "Exécuter plusieurs règles"
+
+#: forms.py:846
+msgid "Parameter"
+msgstr "Paramètre"
+
+#: forms.py:876
+msgid "condition type"
+msgstr "Type de condition"
+
+#: forms.py:879
+msgid "Pipe to the shell command and expect 0 exit code"
+msgstr ""
+"Pipe le message vers une commande shell et valide si la commande se termine "
+"avec un code 0"
+
+#: forms.py:880
+msgid "Is bigger or lower than x bytes"
+msgstr "Est plus grand ou moins grand que x octets"
+
+#: forms.py:881
+msgid "Match the regular expression"
+msgstr "Correspond a l'expression rationnelle"
+
+#: forms.py:885
+msgid "negate"
+msgstr "négation"
+
+#: forms.py:887
+msgid "substitute"
+msgstr "subtituer"
+
+#: forms.py:889
+msgid "substitute counter"
+msgstr "compteur de substitution"
+
+#: forms.py:893
+msgid "score"
+msgstr "score"
+
+#: forms.py:898
+msgid "score x"
+msgstr "score x"
+
+#: forms.py:900
+msgid "Score to add on the first match"
+msgstr "Score a ajouter lors d'une première correspondance"
+
+#: forms.py:903
+msgid "score y"
+msgstr "score y"
+
+#: forms.py:905
+msgid "Score to add on subsequent matches"
+msgstr "Score a ajouter lors de correspondances ultérieures"
+
+#: forms.py:908
+msgid "variable"
+msgstr "variable"
+
+#: forms.py:911
+msgid "Match the condition agains a variable"
+msgstr "Applique la condition a une variable"
+
+#: forms.py:963
+msgid "value"
+msgstr "valeur"
+
+#: forms.py:965
+msgid "Shell eval"
+msgstr "Évalue dans le shell"
+
+#: forms.py:966
+msgid "Evaluate the value in a shell and store the ouput in the variable"
+msgstr "Évalue la valeur dans un shell et stocke la sortie dans la variable"
+
+#: forms.py:1003
+msgid "Simple interface"
+msgstr "Interface simplifié"
+
+#: forms.py:1004
+msgid "Assignment"
+msgstr "Affectation"
+
+#: forms.py:1005
+msgid "Recipe"
+msgstr "Règle"
