@@ -492,7 +492,7 @@ class SimpleConditionBaseSet(BaseFormSet):
                 header = procmail.Header()
                 for letter in flags:
                     setattr(header, letter, True)
-                header.A = True
+                header.E = True
                 if len(statements) == 1 and statements[0].is_recipe():
                     action = statements[0].action
                 else:
