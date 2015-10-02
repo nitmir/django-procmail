@@ -323,7 +323,7 @@ class SimpleCondition(forms.Form):
     conditions = None
 
     object = forms.ChoiceField(
-        label=_('object'),
+        label=_('Scope'),
         choices=[
             ("", ""),
             ("Subject", _("Subject")),
@@ -337,10 +337,10 @@ class SimpleCondition(forms.Form):
         required=False
     )
 
-    custom_header = forms.CharField(label=_('custom header'), max_length=256, required=False)
+    custom_header = forms.CharField(label=_('Custom header'), max_length=256, required=False)
 
     match = forms.ChoiceField(
-        label=_('match'),
+        label=_('Match'),
         choices=[
             ("", ""),
             ("contain", _("contain")),
@@ -357,7 +357,7 @@ class SimpleCondition(forms.Form):
         required=False
     )
 
-    param = forms.CharField(label=_('parameter'), max_length=256, required=False)
+    param = forms.CharField(label=_('Parameter'), max_length=256, required=False)
 
     def clean_custom_header(self):
         if ':' in self.cleaned_data["custom_header"]:
@@ -580,7 +580,7 @@ class SimpleAction(forms.Form):
     statement = None
 
     action = forms.ChoiceField(
-        label=_('action'),
+        label=_('Action'),
         choices=[
             ("", ""),
             ("save", _("Save mail in")),
@@ -592,9 +592,9 @@ class SimpleAction(forms.Form):
         ]
     )
 
-    param = forms.CharField(label=_('parameter'), max_length=256, required=False)
-    variable_name = forms.CharField(label=_('variable name'), max_length=256, required=False)
-    variable_value = forms.CharField(label=_('variable value'), max_length=256, required=False)
+    param = forms.CharField(label=_('Parameter'), max_length=256, required=False)
+    variable_name = forms.CharField(label=_('Variable name'), max_length=256, required=False)
+    variable_value = forms.CharField(label=_('Variable value'), max_length=256, required=False)
 
     def clean(self):
         data = self.cleaned_data
@@ -999,13 +999,15 @@ ConditionFormSet = formset_factory(ConditionForm, extra=1, can_delete=True)
 
 class StatementForm(forms.Form):
 
-    statement = forms.ChoiceField(widget=forms.RadioSelect, choices=[
-        ('simple', _('Simple interface')),
-        ('assignment', _('Assignment')),
-        ('recipe', _('Recipe')),
-
-
-    ])
+    statement = forms.ChoiceField(
+        label="",
+        widget=forms.RadioSelect,
+        choices=[
+            ('simple', _('Simple interface')),
+            ('assignment', _('Assignment')),
+            ('recipe', _('Recipe')),
+        ]
+    )
 
 
 def show(self, field_name):
