@@ -40,7 +40,9 @@ def simple_recipe(r):
         if not r.action.is_save() and not r.action.is_forward():
             # not simple
             raise exceptions.NonSimple()
-        if len(r.conditions) <= 1:
+        if not r.conditions:
+            kind = custom.get('kind', "all")
+        elif len(r.conditions) <= 1:
             if r.conditions and not utils.is_simple_condition(r.conditions[0]):
                 # not simple
                 raise exceptions.NonSimple()
@@ -59,7 +61,9 @@ def simple_recipe(r):
         actions.append((r.header.flag, r.action))
     else:
         if all(utils.is_simple_statement(stmt) for stmt in r):
-            if len(r.conditions) <= 1:
+            if not r.conditions:
+                kind = custom.get('kind', "all")
+            elif len(r.conditions) <= 1:
                 if r.conditions and not utils.is_simple_condition(r.conditions[0]):
                     # not simple
                     raise exceptions.NonSimple()
@@ -115,7 +119,10 @@ def simple_recipe(r):
                         raise exceptions.NonSimple()
                     conditions.append((rr.header.flag, rr.conditions))
                     rr = rr[0]
-                conditions.append((rr.header.flag, rr.conditions))
+                if not rr.is_recipe():
+                    rr = rr.parent
+                else:
+                    conditions.append((rr.header.flag, rr.conditions))
                 if rr.action.is_nested():
                     if not all(utils.is_simple_statement(stmt) for stmt in rr):
                         raise exceptions.NonSimple()
@@ -166,7 +173,7 @@ def simple_condition(flag, condition):
         prefix = "^\^([^:]+):(?:\[ \]\*)?"
         contain = "\.\*(.+)\.\*$"
         equal = "(.+)\$$"
-        exists = "\.\*$"
+        exists = "(?:\.\*)?$"
         regex = "(.+)$"
 
         r = re.match(prefix, condition.regex)
@@ -210,6 +217,8 @@ def simple_condition(flag, condition):
                 except IndexError:
                     param = ""
                 break
+        if param is None:
+            raise ValueError(condition.regex)
         assert param is not None
         if match == 'equal':
             for i in range(0, len(param)):
@@ -256,9 +265,9 @@ def simple_action(flag, action):
             else:
                 data['action'] = "redirect"
         else:
-            raise ValueError(action)
+            raise exceptions.NonSimple()
     else:
-        raise ValueError(action)
+        raise exceptions.NonSimple()
     return data
 
 

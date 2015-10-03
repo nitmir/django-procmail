@@ -547,7 +547,9 @@ class ConditionForm(forms.Form):
                 try:
                     re.compile(param)
                 except re.error as e:
-                    raise forms.ValidationError(_("Param is not a valid regular expression : %s") % e)
+                    raise forms.ValidationError(
+                        _("Param is not a valid regular expression : %s") % e
+                    )
             self.params = (param, )
 
         if self.cleaned_data["substitute"] and self.cleaned_data["substitute_counter"] < 1:

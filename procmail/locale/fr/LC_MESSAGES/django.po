@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-02 19:43+0200\n"
-"PO-Revision-Date: 2015-10-02 19:44+0200\n"
+"POT-Creation-Date: 2015-10-03 19:34+0200\n"
+"PO-Revision-Date: 2015-10-03 19:36+0200\n"
 "Last-Translator: Valentin Samir <valentin.samir@crans.org>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -455,7 +455,7 @@ msgstr "variable"
 msgid "Match the condition agains a variable"
 msgstr "Applique la condition a une variable"
 
-#: forms.py:510 forms.py:558
+#: forms.py:510 forms.py:560
 msgid "variable name"
 msgstr "nom de la variable"
 
@@ -469,38 +469,46 @@ msgstr "La condition %s requière un paramètre"
 msgid "Condition %s parameter must be of the shape (<|>) number"
 msgstr "Le paramètre de la condition %s doit être de la forme (<|>) + entier"
 
-#: forms.py:550
+#: forms.py:551
 #, python-format
 msgid "Param is not a valid regular expression : %s"
 msgstr "Le paramètre n'est pas une expression rationnelle valide : %s"
 
-#: forms.py:554
+#: forms.py:556
 msgid "substitute counter must be >= 1"
 msgstr "Le compteur de substitution doit être >= 1"
 
-#: forms.py:559
+#: forms.py:561
 msgid "value"
 msgstr "valeur"
 
-#: forms.py:561
+#: forms.py:563
 msgid "Shell eval"
 msgstr "Évalue dans le shell"
 
-#: forms.py:562
+#: forms.py:564
 msgid "Evaluate the value in a shell and store the ouput in the variable"
 msgstr "Évalue la valeur dans un shell et stocke la sortie dans la variable"
 
-#: forms.py:602
+#: forms.py:604
 msgid "Simple interface"
 msgstr "Interface simplifié"
 
-#: forms.py:603
+#: forms.py:605
 msgid "Assignment"
 msgstr "Affectation"
 
-#: forms.py:604 templates/procmail/edit.html:20
+#: forms.py:606 templates/procmail/edit.html:20
 msgid "Recipe"
 msgstr "Règle"
+
+#: templates/procmail/base.html:39
+msgid ""
+"Currently in debug mode. This application de not edit your real procmailrc but "
+"a copy made in the following directory :"
+msgstr ""
+"Application actuellement en mode débogage. Elle n'édite pas votre véritable "
+"procmailrc mais un copie faite dans le dossier suivant : "
 
 #: templates/procmail/create.html:5
 msgid "Step"
@@ -589,6 +597,19 @@ msgstr "Procmailrc généré"
 #: templates/procmail/index.html:7
 msgid "Download"
 msgstr "Télécharger"
+
+#: templates/procmail/parse_error.html:4
+msgid "Syntax error in procmailrc"
+msgstr "Erreur de syntaxe dans le procmailrc"
+
+#: views.py:279
+#, python-format
+msgid ""
+"Fail to parse your procmailrc. You probably have a syntax error\n"
+"near %(line)s at line %(lineno)s, column %(col)s."
+msgstr ""
+"Échec lors de l'analyse de votre procmailrc. Vous avez probablement une erreur "
+"de syntaxe près de %(line)s ligne %(lineno)s, colonne %(col)s."
 
 #~ msgid "object"
 #~ msgstr "objet"

@@ -23,6 +23,14 @@ import forms_initial
 
 unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
 
+def context(cntxt):
+    base = {
+        'PROCMAIL_INPLACE': settings.PROCMAIL_INPLACE,
+        'PROCMAIL_DEBUG_DIR': settings.PROCMAIL_DEBUG_DIR,
+        'PROCMAIL_OR_SCORE': settings.PROCMAIL_OR_SCORE,
+    }
+    base.update(cntxt)
+    return base
 
 def set_extra(self, **kwargs):
     self.extra = kwargs

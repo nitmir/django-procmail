@@ -10,11 +10,13 @@
 #
 # (c) 2015 Valentin Samir
 from django.shortcuts import render, redirect
+from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
 from django.contrib.formtools.wizard.views import SessionWizardView
 
 from pyprocmail import procmail
+from pyprocmail.parser import ParseException
 
 import forms
 import forms_initial
@@ -71,7 +73,10 @@ class CreateStatement(SessionWizardView):
         return "procmail/create.html"
 
     def get_context_data(self, form, **kwargs):
-        procmailrc = utils.get_procmailrc(self.request.user)
+        try:
+            procmailrc = utils.get_procmailrc(self.request.user)
+        except ParseException as error:
+            pass
         context = super(CreateStatement, self).get_context_data(form=form, **kwargs)
         form_context = []
         for step, form in self.form_list.items():
@@ -83,7 +88,10 @@ class CreateStatement(SessionWizardView):
 
     def done(self, form_list, form_dict, **kwargs):
         typ = self.get_cleaned_data_for_step("choose")["statement"]
-        procmailrc = utils.get_procmailrc(self.request.user)
+        try:
+            procmailrc = utils.get_procmailrc(self.request.user)
+        except ParseException as error:
+            return parse_error(request, error)
         if typ == "recipe":
             return do_edit_recipe(
                 self.request,
@@ -136,13 +144,19 @@ def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, 
 
 @login_required
 def index(request):
-    procmailrc = utils.get_procmailrc(request.user)
-    return render(request, "procmail/index.html", {"procmailrc": procmailrc})
+    try:
+        procmailrc = utils.get_procmailrc(request.user)
+    except ParseException as error:
+        return parse_error(request, error)
+    return render(request, "procmail/index.html", utils.context({"procmailrc": procmailrc}))
 
 
 @login_required
 def download(request):
-    procmailrc = utils.get_procmailrc(request.user)
+    try:
+        procmailrc = utils.get_procmailrc(request.user)
+    except ParseException as error:
+        return parse_error(request, error)
     return HttpResponse(procmailrc.render().encode("utf-8"), content_type="text/plain; charset=utf-8")
 
 
@@ -273,12 +287,23 @@ def get_rule(procmailrc, id):
         raise Http404()
     return r
 
+def parse_error(request, error):
+    error_msg = _("""Fail to parse your procmailrc. You probably have a syntax error
+near %(line)s at line %(lineno)s, column %(col)s.""") % {
+        'line': repr(error.line)[1:],
+        'lineno': error.lineno,
+        'col': error.col
+    }
+    return render(request, "procmail/parse_error.html", {'error_msg': error_msg, 'error': error})
 
 @login_required
 def edit_simple(request, id):
     if not id:
         return redirect("procmail:index")
-    procmailrc = utils.get_procmailrc(request.user)
+    try:
+        procmailrc = utils.get_procmailrc(request.user)
+    except ParseException as error:
+        return parse_error(request, error)
     r = get_rule(procmailrc, id)
     if not r.django['is_simple']:
         return redirect("procmail:edit", id=id)
@@ -340,14 +365,17 @@ def edit_simple(request, id):
         'curr_stmt': r,
     }
 
-    return render(request, "procmail/edit_simple.html", params)
+    return render(request, "procmail/edit_simple.html", utils.context(params))
 
 
 @login_required
 def edit(request, id):
     if not id:
         return redirect("procmail:index")
-    procmailrc = utils.get_procmailrc(request.user)
+    try:
+        procmailrc = utils.get_procmailrc(request.user)
+    except ParseException as error:
+        return parse_error(request, error)
     r = get_rule(procmailrc, id)
 
     params = {"procmailrc": procmailrc, "curr_stmt": r}
@@ -436,7 +464,7 @@ def edit(request, id):
             )
             params["form_meta"] = form_meta
             params["form_assignment"] = form_assignment
-    return render(request, "procmail/edit.html", params)
+    return render(request, "procmail/edit.html", utils.context(params))
 
 
 @login_required
@@ -452,7 +480,10 @@ def down(request, id, cur_id):
 def up_down(request, id, cur_id, op, test):
     ids = id.split('.')
 
-    procmailrc = utils.get_procmailrc(request.user)
+    try:
+        procmailrc = utils.get_procmailrc(request.user)
+    except ParseException as error:
+        return parse_error(request, error)
     r = procmailrc
     try:
         for i in ids[:-1]:
