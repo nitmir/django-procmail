@@ -528,8 +528,9 @@ class ConditionForm(forms.Form):
         if self.cleaned_data["type"] == procmail.ConditionSize.type:
             if ('<' not in param and '>' not in param) or ('<' in param and '>' in param):
                 raise forms.ValidationError(
-                    _("Condition %s parameter must be of "
-                    + "the shape (<|>) number") % self.cleaned_data["type"]
+                    _(
+                        "Condition %s parameter must be of the shape (<|>) number"
+                    ) % self.cleaned_data["type"]
                 )
 
             sign = '<' if '<' in param else '>'
@@ -538,8 +539,9 @@ class ConditionForm(forms.Form):
                 size = int(size)
             except ValueError:
                 raise forms.ValidationError(
-                    _("Condition %s parameter must be of "
-                    + "the shape (<|>) number") % self.cleaned_data["type"]
+                    _(
+                        "Condition %s parameter must be of the shape (<|>) number"
+                    ) % self.cleaned_data["type"]
                 )
             self.params = (sign, size)
         else:

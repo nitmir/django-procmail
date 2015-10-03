@@ -75,7 +75,7 @@ class CreateStatement(SessionWizardView):
     def get_context_data(self, form, **kwargs):
         try:
             procmailrc = utils.get_procmailrc(self.request.user)
-        except ParseException as error:
+        except ParseException:
             pass
         context = super(CreateStatement, self).get_context_data(form=form, **kwargs)
         form_context = []
@@ -91,7 +91,7 @@ class CreateStatement(SessionWizardView):
         try:
             procmailrc = utils.get_procmailrc(self.request.user)
         except ParseException as error:
-            return parse_error(request, error)
+            return parse_error(self.request, error)
         if typ == "recipe":
             return do_edit_recipe(
                 self.request,
@@ -157,7 +157,10 @@ def download(request):
         procmailrc = utils.get_procmailrc(request.user)
     except ParseException as error:
         return parse_error(request, error)
-    return HttpResponse(procmailrc.render().encode("utf-8"), content_type="text/plain; charset=utf-8")
+    return HttpResponse(
+        procmailrc.render().encode("utf-8"),
+        content_type="text/plain; charset=utf-8"
+    )
 
 
 def do_edit_recipe(
@@ -287,6 +290,7 @@ def get_rule(procmailrc, id):
         raise Http404()
     return r
 
+
 def parse_error(request, error):
     error_msg = _("""Fail to parse your procmailrc. You probably have a syntax error
 near %(line)s at line %(lineno)s, column %(col)s.""") % {
@@ -295,6 +299,7 @@ near %(line)s at line %(lineno)s, column %(col)s.""") % {
         'col': error.col
     }
     return render(request, "procmail/parse_error.html", {'error_msg': error_msg, 'error': error})
+
 
 @login_required
 def edit_simple(request, id):

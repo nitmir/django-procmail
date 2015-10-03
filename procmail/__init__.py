@@ -17,6 +17,8 @@ _DEFAULTS = {
     'PROCMAIL_INPLACE': True,
     'PROCMAIL_DEBUG_DIR': None,
     'PROCMAIL_OR_SCORE': 4294910507,
+    'PROCMAIL_FALLBACK_ENCODING': 'ISO-8859-15',  # use a single-byte encodings
+    'PROCMAIL_DEFAULT_ENCODING': 'utf-8',
 }
 
 for key, value in list(_DEFAULTS.items()):

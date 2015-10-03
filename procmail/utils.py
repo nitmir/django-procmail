@@ -14,6 +14,7 @@ from django.conf import settings
 import os
 import shutil
 import json
+from chardet.universaldetector import UniversalDetector
 
 from pyprocmail import procmail
 
@@ -23,6 +24,25 @@ import forms_initial
 
 unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
 
+
+def detect_charset(path):
+    detector = UniversalDetector()
+    with open(path) as f:
+        i = 0
+        for line in iter(f.readline, ""):
+            detector.feed(line)
+            # process at most the first 1000 lines
+            if detector.done or i > 1000:
+                break
+            i += 1
+    detector.close()
+    result = detector.result
+    if result['encoding'] in [None, "windows-1252"] or result['encoding'].startswith('ISO-8859'):
+        return settings.PROCMAIL_FALLBACK_ENCODING
+    else:
+        return result['encoding']
+
+
 def context(cntxt):
     base = {
         'PROCMAIL_INPLACE': settings.PROCMAIL_INPLACE,
@@ -31,6 +51,7 @@ def context(cntxt):
     }
     base.update(cntxt)
     return base
+
 
 def set_extra(self, **kwargs):
     self.extra = kwargs
@@ -57,7 +78,13 @@ def set_simple(rules):
 
 def get_procmailrc(user):
     procmailrc_path = get_procmailrc_path(user)
-    procmailrc = procmail.parse(procmailrc_path)
+    # Try first using default encoding (utf-8 by default)
+    try:
+        procmailrc = procmail.parse(procmailrc_path, charset=settings.PROCMAIL_DEFAULT_ENCODING)
+    except UnicodeDecodeError:
+        # If an error occure, try detecting the encoding
+        charset = detect_charset(procmailrc_path)
+        procmailrc = procmail.parse(procmailrc_path, charset=charset)
     set_simple(procmailrc)
     return procmailrc
 
@@ -79,7 +106,7 @@ def get_procmailrc_path(user):
 
 def set_procmailrc(user, procmailrc):
     procmailrc_path = get_procmailrc_path(user)
-    procmailrc.write(procmailrc_path)
+    procmailrc.write(procmailrc_path, charset=settings.PROCMAIL_DEFAULT_ENCODING)
 
 
 def oring(conditions):
