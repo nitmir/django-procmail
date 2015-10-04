@@ -170,24 +170,25 @@ def simple_condition(flag, condition):
         data['object'] = "body"
 
     if condition.is_regex():
-        prefix = "^\^([^:]+):(?:\[ \]\*)?"
-        contain = "\.\*(.+)\.\*$"
-        equal = "(.+)\$$"
-        exists = "(?:\.\*)?$"
-        regex = "(.+)$"
+        prefix = "^\\^([^:]+):(?:\\[ \\]\\*)?"
+        contain = ("\\.\\*(.+)\\.\\*$", "\\.\\*(.+)$")
+        equal = ("(.+)\\$$", )
+        exists = ("(?:\\.\\*)?$",)
+        regex = ("(.+)$",)
 
         r = re.match(prefix, condition.regex)
         if r is not None:
-            contain = "^\^[^:]+:(?:\[ \]\*)?" + contain
-            equal = "^\^[^:]+:(?:\[ \]\*)?" + equal
-            exists = "^\^[^:]+:(?:\[ \]\*)?" + exists
-            regex = "^\^[^:]+:(?:\[ \]\*)?" + regex
+            prefix_re = "^\\^[^:]+:(?:\\[ \\]\\*)?"
+            contain = [prefix_re + e for e in contain]
+            equal = [prefix_re + e for e in equal]
+            exists = [prefix_re + e for e in exists]
+            regex = [prefix_re + e for e in regex]
             prefix = r.group(1)
         else:
-            contain = '^' + contain
-            equal = '^' + equal
-            exists = '^' + exists
-            regex = '^' + regex
+            contain = ['^' + e for e in contain]
+            equal = ['^' + e for e in equal]
+            exists = ['^' + e for e in exists]
+            regex = ['^' + e for e in regex]
             prefix = None
 
         if data['object'] is None:
@@ -199,39 +200,41 @@ def simple_condition(flag, condition):
                 data['object'] = "To"
             elif prefix is not None:
                 data['object'] = "custom_header"
-                data["custom_header"] = prefix
+                data["custom_header"] = utils.unescape_re(prefix)
             else:
                 data['object'] = "headers"
 
         param = None
-        for match, exp in [
-            ('contain', contain),
-            ('equal', equal),
-            ('exists', exists),
-            ('regex', regex)
-        ]:
-            r = re.match(exp, condition.regex)
-            if r is not None:
-                try:
-                    param = r.group(1)
-                except IndexError:
-                    param = ""
-                break
+        try:
+            for match, exps in [
+                ('contain', contain),
+                ('equal', equal),
+                ('exists', exists),
+                ('regex', regex)
+            ]:
+                for exp in exps:
+                    r = re.match(exp, condition.regex)
+                    if r is not None:
+                        try:
+                            param = r.group(1)
+                        except IndexError:
+                            param = ""
+                        raise exceptions.Break()
+        except exceptions.Break:
+            pass
         if param is None:
             raise ValueError(condition.regex)
         assert param is not None
-        if match == 'equal':
-            for i in range(0, len(param)):
-                if not param[i] == '\\' and not param[i].isalnum():
-                    if not i > 0 or not param[i-1] == '\\':
-                        match = "regex"
-                        param = param + '$'
+        if utils.is_regex(param):
+            match = 'regex'
+            r = re.match(regex[0], condition.regex)
+            param = r.group(1)
         if negate:
             data['match'] = "not_%s" % match
         else:
             data['match'] = match
         if match != "regex":
-            data['param'] = re.sub('\\\(.)', '\\1', param)
+            data['param'] = utils.unescape_re(param)
         else:
             data['param'] = param
 

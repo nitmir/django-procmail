@@ -20,9 +20,38 @@ from pyprocmail import procmail
 
 import exceptions
 import forms_initial
-
+import config
 
 unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
+
+
+def escape_re(string):
+    for char in config.REGEX_CHARS:
+        string = string.replace(char, '\\%s' % char)
+    return string
+
+
+def unescape_re(string):
+    for char in config.REGEX_CHARS:
+        string = string.replace('\\%s' % char, char)
+    return string
+
+
+def is_regex(string):
+    for char in config.REGEX_CHARS:
+        i = -1
+        try:
+            while True:
+                i = string.index(char, i+1)
+                if i == 0 or string[i-1] != '\\':
+                    return True
+        except ValueError:
+            pass
+    special_constructs = ['\\/', '\\<', '\\>']
+    for const in special_constructs:
+        if const in string:
+            return True
+    return False
 
 
 def detect_charset(path):

@@ -125,7 +125,7 @@ class SimpleCondition(forms.Form):
         elif data["object"] == "To":
             prefix = "^To:[ ]*"
         elif data["object"] == "custom_header":
-            prefix = "^%s:[ ]*" % re.escape(data["custom_header"])
+            prefix = "^%s:[ ]*" % utils.escape_re(data["custom_header"])
         else:
             prefix = ""
 
@@ -140,9 +140,9 @@ class SimpleCondition(forms.Form):
                 negate = False
                 match = data["match"]
             if data["match"] == "contain":
-                regex = "%s.*%s.*" % (prefix, re.escape(data["param"]))
+                regex = "%s.*%s.*" % (prefix, utils.escape_re(data["param"]))
             elif match == "equal":
-                regex = "%s%s$" % (prefix, re.escape(data["param"]))
+                regex = "%s%s$" % (prefix, utils.escape_re(data["param"]))
             elif match == "exists":
                 regex = "%s.*" % prefix
             elif match == "regex":

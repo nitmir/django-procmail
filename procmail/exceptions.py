@@ -17,3 +17,7 @@ class NonOred(ValueError):
 
 class NonSimple(ValueError):
     pass
+
+
+class Break(Exception):
+    pass
