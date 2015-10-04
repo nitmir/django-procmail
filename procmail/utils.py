@@ -10,6 +10,7 @@
 #
 # (c) 2015 Valentin Samir
 from django.conf import settings
+from django.core.cache import caches
 
 import os
 import shutil
@@ -87,8 +88,11 @@ def set_extra(self, **kwargs):
     return self
 
 
-def set_simple(rules):
+def _process_procmailrc(rules, flat=None):
+    if flat is None:
+        flat = []
     for r in rules:
+        flat.append(r)
         if r.is_recipe() or r.is_assignment():
             try:
                 initials, custom = forms_initial.simple_recipe(r)
@@ -100,13 +104,31 @@ def set_simple(rules):
             except exceptions.NonSimple:
                 r.django = {'is_simple': False}
             if r.is_recipe() and r.action.is_nested():
-                set_simple(r.action)
+                flat.append("in")
+                _process_procmailrc(r.action, flat)
+                flat.append("out")
         else:
             r.django = {'is_simple': False}
+    return flat
+
+
+def process_procmailrc(procmailrc, key):
+    procmailrc.django = {}
+    flat = _process_procmailrc(procmailrc)
+    procmailrc.django['flat'] = flat
+    procmailrc.django['key'] = key
 
 
 def get_procmailrc(user):
     procmailrc_path = get_procmailrc_path(user)
+    key = "%s-%s-%s" % (
+        user.username,
+        os.path.getmtime(procmailrc_path),
+        os.path.getsize(procmailrc_path)
+    )
+    procmailrc = caches['default'].get(key)
+    if procmailrc is not None:
+        return procmailrc
     # Try first using default encoding (utf-8 by default)
     try:
         procmailrc = procmail.parse(procmailrc_path, charset=settings.PROCMAIL_DEFAULT_ENCODING)
@@ -114,7 +136,8 @@ def get_procmailrc(user):
         # If an error occure, try detecting the encoding
         charset = detect_charset(procmailrc_path)
         procmailrc = procmail.parse(procmailrc_path, charset=charset)
-    set_simple(procmailrc)
+    process_procmailrc(procmailrc, key)
+    caches['default'].set(key, procmailrc, 3600)
     return procmailrc
 
 
@@ -135,7 +158,14 @@ def get_procmailrc_path(user):
 
 def set_procmailrc(user, procmailrc):
     procmailrc_path = get_procmailrc_path(user)
-    procmailrc.write(procmailrc_path, charset=settings.PROCMAIL_DEFAULT_ENCODING)
+    procmailrc = procmailrc.write(procmailrc_path, charset=settings.PROCMAIL_DEFAULT_ENCODING)
+    key = "%s-%s-%s" % (
+        user.username,
+        os.path.getmtime(procmailrc_path),
+        os.path.getsize(procmailrc_path)
+    )
+    process_procmailrc(procmailrc, key)
+    caches['default'].set(key, procmailrc, 3600)
 
 
 def oring(conditions):

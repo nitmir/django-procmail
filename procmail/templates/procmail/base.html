@@ -44,9 +44,7 @@ pre {
 {% if procmailrc %}
 <td style="vertical-align:top;min-width:100px;padding-right:10px">
 <h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
-<ul>
-{% for stmt in procmailrc %}{% if not stmt.is_comment %}{% include "procmail/stmt.html" with stmt=stmt %}{% endif %}{% endfor %}
-</ul>
+{% include "procmail/list.html" with procmailrc=procmailrc %}
 </td>
 {% endif %}
 <td style="vertical-align:top">
