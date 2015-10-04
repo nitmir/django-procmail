@@ -1,5 +1,4 @@
 {% load cache %}
-{% cache 3600 procmail_list procmailrc.django.key %}
 <ul>
 {% for stmt in procmailrc.django.flat %}{% if stmt == "in" %}<ul>{% elif stmt == "out" %}</ul>{% elif stmt.is_comment %}{% else %}<li>{% spaceless %}
 {% if not stmt.is_first %}<a href="{% url "procmail:up" stmt.id curr_stmt.id%}" ><i title="move up" class="fa fa-caret-up"></i></a>{% endif %}
@@ -9,4 +8,3 @@
 {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
 {% endspaceless %}</li>{% endif %}{% endfor %}
 </ul>
-{% endcache %}

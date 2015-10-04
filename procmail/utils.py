@@ -15,6 +15,7 @@ from django.core.cache import caches
 import os
 import shutil
 import json
+import hashlib
 from chardet.universaldetector import UniversalDetector
 
 from pyprocmail import procmail
@@ -118,14 +119,17 @@ def process_procmailrc(procmailrc, key):
     procmailrc.django['flat'] = flat
     procmailrc.django['key'] = key
 
+def procmailrc_key(username, path):
+    key = "%s-%s-%s" % (
+        username,
+        os.path.getmtime(path),
+        os.path.getsize(path)
+    )
+    return hashlib.sha1(key.encode("utf-8", errors='replace')).hexdigest()
 
 def get_procmailrc(user):
     procmailrc_path = get_procmailrc_path(user)
-    key = "%s-%s-%s" % (
-        user.username,
-        os.path.getmtime(procmailrc_path),
-        os.path.getsize(procmailrc_path)
-    )
+    key = procmailrc_key(user.username, procmailrc_path)
     procmailrc = caches['default'].get(key)
     if procmailrc is not None:
         return procmailrc
@@ -151,19 +155,16 @@ def get_procmailrc_path(user):
             home = os.path.expanduser("~%s" % user.username)
             if os.path.isfile(os.path.join(home, ".procmailrc")):
                 shutil.copy(os.path.join(home, ".procmailrc"), procmailrc_path)
-    if not os.path.isfile(procmailrc_path):
-        open(procmailrc_path, 'a').close()
+    if not os.path.isfile(procmailrc_path) or os.path.getsize(procmailrc_path) < 2:
+        with open(procmailrc_path, 'w') as f:
+            f.write(settings.PROCMAIL_DEFAULT_PROCMAILRC)
     return procmailrc_path
 
 
 def set_procmailrc(user, procmailrc):
     procmailrc_path = get_procmailrc_path(user)
     procmailrc = procmailrc.write(procmailrc_path, charset=settings.PROCMAIL_DEFAULT_ENCODING)
-    key = "%s-%s-%s" % (
-        user.username,
-        os.path.getmtime(procmailrc_path),
-        os.path.getsize(procmailrc_path)
-    )
+    key = procmailrc_key(user.username, procmailrc_path)
     process_procmailrc(procmailrc, key)
     caches['default'].set(key, procmailrc, 3600)
 

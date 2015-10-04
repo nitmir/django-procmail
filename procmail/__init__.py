@@ -19,6 +19,10 @@ _DEFAULTS = {
     'PROCMAIL_OR_SCORE': 4294910507,
     'PROCMAIL_FALLBACK_ENCODING': 'ISO-8859-15',  # use a single-byte encodings
     'PROCMAIL_DEFAULT_ENCODING': 'utf-8',
+    'PROCMAIL_DEFAULT_PROCMAILRC': """#title:Preliminaries
+SHELL=/bin/sh MAILDIR=${HOME}/Mail/ LOGFILE=${MAILDIR}/procmail.log LOG="--- Logging for ${LOGNAME}, " FORMAIL=/usr/bin/formail
+"""
+
 }
 
 for key, value in list(_DEFAULTS.items()):
