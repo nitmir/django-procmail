@@ -1,0 +1,24 @@
+{% extends "procmail/base.html" %}
+{% load i18n %}
+{% block content %}
+    <h1>{% trans "Delete statement" %}</h1>
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">{% trans "Deletion of a procmail rule" %}</h3>
+  </div>
+  <div class="panel-body">
+    <p>{{msg}}</p>
+  </div>
+  <div class="panel-footer text-right">
+    <form action="" method="post">
+      {% csrf_token %}
+      {{form}}
+      <input type="submit" value="{% trans "Delete" %}" class="btn btn-danger"/>
+      {% with "procmail:"|add:view_name as view_name %}
+        <a class="btn btn-default" href="{% url view_name curr_stmt.id %}" />{% trans "Cancel"%}</a>
+      {% endwith %}
+    </form>
+  </div>
+</div>
+{% endblock %}
+

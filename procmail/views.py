@@ -23,6 +23,33 @@ import forms_initial
 import utils
 
 
+def delete(request, id, view_name):
+    try:
+        procmailrc = utils.get_procmailrc(request.user)
+    except ParseException as error:
+        return parse_error(request, error)
+    r = get_rule(procmailrc, id)
+    if request.method == 'POST':
+        form = forms.DeleteStatement(request.POST, statement=r)
+        if form.is_valid():
+            id = r.delete()
+            utils.set_procmailrc(request.user, procmailrc)
+        return redirect("procmail:%s" % view_name, id=id)
+    else:
+        form = forms.DeleteStatement(statement=r)
+        params = {
+            'form': form,
+            'curr_stmt': r,
+            'procmailrc': procmailrc,
+            'view_name': view_name,
+            'msg': _('Are you sure you want to delete the %(type)s "%(title)s" ?') % {
+                'type': _('assignement') if r.is_assignment() else _("recipe"),
+                'title': r.meta_title if r.meta_title else r.gen_title(),
+            }
+        }
+        return render(request, "procmail/delete.html", utils.context(params))
+
+
 class CreateStatement(SessionWizardView):
     form_list = [
         ("choose", forms.StatementForm),
@@ -181,9 +208,7 @@ def do_edit_recipe(
                 r.parent = get_rule(procmailrc, id)
                 id = r.parent.append(r)
             if delete:
-                id = r.delete()
-                utils.set_procmailrc(request.user, procmailrc)
-                return redirect("procmail:edit", id=id)
+                return redirect("procmail:delete", id=id, view_name="edit")
             elif form_meta.is_valid() and form_header.is_valid() \
                     and form_action.is_valid() and form_condition.is_valid():
                 # header
@@ -256,9 +281,7 @@ def do_edit_assignment(request, id, r, procmailrc, form_meta, form_assignment, d
                 r.parent = get_rule(procmailrc, id)
                 id = r.parent.append(r)
             if delete:
-                id = r.delete()
-                utils.set_procmailrc(request.user, procmailrc)
-                return redirect("procmail:edit", id=id)
+                return redirect("procmail:delete", id=id, view_name="edit")
             elif form_meta.is_valid() and form_assignment.is_valid():
                 r.meta_title = form_meta.cleaned_data['title']
                 r.meta_comment = form_meta.cleaned_data['comment']
@@ -288,7 +311,7 @@ near %(line)s at line %(lineno)s, column %(col)s.""") % {
         'lineno': error.lineno,
         'col': error.col
     }
-    return render(request, "procmail/parse_error.html", {'error_msg': error_msg, 'error': error})
+    return render(request, "procmail/parse_error.html", utils.context({'error_msg': error_msg, 'error': error}))
 
 
 @login_required
@@ -327,9 +350,7 @@ def edit_simple(request, id):
             prefix="actions"
         )
         if "delete_stmt" in request.POST:
-            id = r.delete()
-            utils.set_procmailrc(request.user, procmailrc)
-            return redirect("procmail:edit_simple", id=id)
+            return redirect("procmail:delete", id=id, view_name="edit_simple")
         elif all(form.is_valid() for form in [form_meta, form_cond_kind, form_cond, form_action]):
             kind = form_cond_kind.cleaned_data["kind"]
             statements = form_action.statements

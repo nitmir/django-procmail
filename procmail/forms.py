@@ -23,6 +23,10 @@ from pyprocmail import procmail
 forms.Field.set_extra = utils.set_extra
 forms.Field.extra = {}
 
+class DeleteStatement(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.statement = kwargs.pop('statement', None)
+        super(DeleteStatement, self).__init__(*args, **kwargs)
 
 class MetaForm(forms.Form):
     title = forms.CharField(label=_('title'), max_length=100)
