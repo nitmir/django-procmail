@@ -65,36 +65,16 @@ class CreateStatement(SessionWizardView):
     ]
 
     condition_dict = {
-        "assignment": (
-            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
-            wizard.get_cleaned_data_for_step("choose").get("statement") == "assignment"
+        "assignment": utils.wizard_switch_by_stmt("assignment"),
+        "header": utils.wizard_switch_by_stmt("recipe"),
+        "conditions": utils.wizard_switch_by_stmt("recipe"),
+        "action": utils.wizard_switch_by_stmt("recipe"),
+        "simple_condition_kind": utils.wizard_switch_by_stmt("simple"),
+        "simple_conditions": utils.wizard_switch_by_stmt(
+            "simple",
+            utils.wizard_switch_by_kinds(["and", "or"])
         ),
-        "header": (
-            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
-            wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe"
-        ),
-        "conditions": (
-            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
-            wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe"
-        ),
-        "action": (
-            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
-            wizard.get_cleaned_data_for_step("choose").get("statement") == "recipe"
-        ),
-        "simple_condition_kind": (
-            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
-            wizard.get_cleaned_data_for_step("choose").get("statement") == "simple"
-        ),
-        "simple_conditions": (
-            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
-            wizard.get_cleaned_data_for_step("simple_condition_kind") and
-            wizard.get_cleaned_data_for_step("choose").get("statement") == "simple" and
-            wizard.get_cleaned_data_for_step("simple_condition_kind").get("kind") in ["and", "or"]
-        ),
-        "simple_actions": (
-            lambda wizard: wizard.get_cleaned_data_for_step("choose") and
-            wizard.get_cleaned_data_for_step("choose").get("statement") == "simple"
-        ),
+        "simple_actions": utils.wizard_switch_by_stmt("simple"),
     }
 
     def get_template_names(self):

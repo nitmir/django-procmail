@@ -28,6 +28,25 @@ import config
 unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
 
 
+def wizard_switch_by_stmt(stmt, alt=None):
+    def f(wizard):
+        return (
+            wizard.get_cleaned_data_for_step("choose") and
+            wizard.get_cleaned_data_for_step("choose").get("statement") == stmt and
+            (alt is None or alt(wizard))
+        )
+    return f
+
+
+def wizard_switch_by_kinds(kinds):
+    def f(wizard):
+        return (
+            wizard.get_cleaned_data_for_step("simple_condition_kind") and
+            wizard.get_cleaned_data_for_step("simple_condition_kind").get("kind") in kinds
+        )
+    return f
+
+
 def escape_re(string):
     for char in config.REGEX_CHARS:
         string = string.replace(char, '\\%s' % char)
