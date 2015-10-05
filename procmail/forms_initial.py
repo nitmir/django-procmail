@@ -177,7 +177,7 @@ def simple_condition(flag, condition):
         regex = ("(.+)$",)
 
         r = re.match(prefix, condition.regex)
-        if r is not None:
+        if r is not None and not utils.is_regex(r.group(1)):
             prefix_re = "^\\^[^:]+:(?:\\[ \\]\\*)?"
             contain = [prefix_re + e for e in contain]
             equal = [prefix_re + e for e in equal]
