@@ -15,11 +15,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
 from django.contrib.formtools.wizard.views import SessionWizardView
 
-from pyprocmail import procmail
 from pyprocmail.parser import ParseException
 
 import forms
-import forms_initial
 import utils
 
 
@@ -28,7 +26,10 @@ def delete(request, id, view_name):
         procmailrc = utils.get_procmailrc(request.user)
     except ParseException as error:
         return parse_error(request, error)
-    r = get_rule(procmailrc, id)
+    try:
+        r = procmailrc[id]
+    except KeyError:
+        raise Http404()
     if request.method == 'POST':
         form = forms.DeleteStatement(request.POST, statement=r)
         if form.is_valid():
@@ -120,54 +121,45 @@ class CreateStatement(SessionWizardView):
         except ParseException as error:
             return parse_error(self.request, error)
         if typ == "recipe":
-            return do_edit_recipe(
-                self.request,
-                self.kwargs['id'],
-                None,
-                procmailrc,
-                form_dict["metadata"],
-                form_dict["header"],
-                form_dict["conditions"],
-                form_dict["action"]
+            r = utils.make_recipe(procmailrc, self.kwargs['id'])
+            utils.update_recipe(
+                r,
+                form_dict["metadata"].cleaned_data['title'],
+                form_dict["metadata"].cleaned_data['comment'],
+                form_dict["header"].header,
+                form_dict["action"].action,
+                form_dict["conditions"].conditions
             )
+            utils.set_procmailrc(self.request.user, procmailrc)
+            return redirect("procmail:edit", id=r.id)
         elif typ == "assignment":
-            return do_edit_assignment(
-                self.request,
-                self.kwargs['id'],
-                None,
-                procmailrc,
-                form_dict["metadata"],
-                form_dict["assignment"]
+            r = utils.make_assignment(procmailrc, self.kwargs['id'])
+            utils.update_assignment(
+                r,
+                form_dict["metadata"].cleaned_data['title'],
+                form_dict["metadata"].cleaned_data['comment'],
+                form_dict["assignment"].variables
             )
+            utils.set_procmailrc(self.request.user, procmailrc)
+            return redirect("procmail:edit", id=r.id)
         elif typ == "simple":
-            return do_simple(
-                self.request,
-                self.kwargs['id'],
-                None,
-                procmailrc,
-                form_dict["metadata"],
-                form_dict["simple_condition_kind"],
-                form_dict.get("simple_conditions"),
-                form_dict["simple_actions"]
+            try:
+                conditions = form_dict["simple_conditions"].conditions
+            except KeyError:
+                conditions = None
+            r = utils.make_simple_rules(
+                form_dict["simple_condition_kind"].cleaned_data["kind"],
+                form_dict["metadata"].cleaned_data['title'],
+                form_dict["metadata"].cleaned_data['comment'],
+                form_dict["simple_actions"].statements,
+                conditions
             )
-
-
-def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, form_action):
-    kind = form_cond_kind.cleaned_data["kind"]
-    statements = form_action.statements
-    title = form_meta.cleaned_data["title"]
-    comment = form_meta.cleaned_data["comment"]
-    r = utils.make_simple_rules(
-        kind,
-        title,
-        comment,
-        statements,
-        form_cond.conditions if form_cond else None
-    )
-    r.parent = get_rule(procmailrc, id)
-    id = r.parent.append(r)
-    utils.set_procmailrc(request.user, procmailrc)
-    return redirect("procmail:edit_simple", id=id)
+            try:
+                r.parent = procmailrc[self.kwargs['id']]
+            except KeyError:
+                raise Http404()
+            utils.set_procmailrc(self.request.user, procmailrc)
+            return redirect("procmail:edit_simple", id=r.id)
 
 
 @login_required
@@ -191,119 +183,6 @@ def download(request):
     )
 
 
-def do_edit_recipe(
-    request,
-    id,
-    r,
-    procmailrc,
-    form_meta,
-    form_header,
-    form_condition,
-    form_action,
-    create=False,
-    delete=False
-):
-            if r is None:
-                r = procmail.Recipe(procmail.Header(), procmail.Action())
-                r.parent = get_rule(procmailrc, id)
-                id = r.parent.append(r)
-            if delete:
-                return redirect("procmail:delete", id=id, view_name="edit")
-            elif form_meta.is_valid() and form_header.is_valid() \
-                    and form_action.is_valid() and form_condition.is_valid():
-                # header
-                r.header.H = form_header.cleaned_data['H']
-                r.header.B = form_header.cleaned_data['B']
-                r.header.h = form_header.cleaned_data['h']
-                r.header.b = form_header.cleaned_data['b']
-                r.header.c = form_header.cleaned_data['c']
-                r.header.A = form_header.cleaned_data['A']
-                r.header.a = form_header.cleaned_data['a']
-                r.header.E = form_header.cleaned_data['E']
-                r.header.e = form_header.cleaned_data['e']
-                r.header.f = form_header.cleaned_data['f']
-                r.header.i = form_header.cleaned_data['i']
-                r.header.r = form_header.cleaned_data['r']
-                r.header.w = form_header.cleaned_data['w']
-                r.header.W = form_header.cleaned_data['W']
-                r.header.D = form_header.cleaned_data['D']
-                r.meta_title = form_meta.cleaned_data['title']
-                r.meta_comment = form_meta.cleaned_data['comment']
-                if form_header.cleaned_data['lockfile']:
-                    if form_header.cleaned_data['lockfile_path']:
-                        r.header.lockfile = form_header.cleaned_data['lockfile_path']
-                    else:
-                        r.header.lockfile = True
-                else:
-                    r.header.lockfile = False
-                # conditions
-                conditions = []
-                for fcond in form_condition:
-                    if fcond.cleaned_data.get('DELETE', False):
-                        continue
-                    if not fcond.cleaned_data.get('type'):
-                        continue
-                    cond = procmail.Condition.from_type(fcond.cleaned_data['type'])(*fcond.params)
-                    if fcond.cleaned_data['negate']:
-                        cond = procmail.ConditionNegate(cond)
-                    if fcond.cleaned_data['score']:
-                        cond = procmail.ConditionScore(
-                            fcond.cleaned_data['score_x'],
-                            fcond.cleaned_data['score_y'],
-                            cond
-                        )
-                    if fcond.cleaned_data['substitute']:
-                        for i in range(fcond.cleaned_data['substitute_counter']):
-                            cond = procmail.ConditionSubstitute(cond)
-                    if fcond.cleaned_data['variable']:
-                        cond = procmail.ConditionVariable(
-                            fcond.cleaned_data['variable_name'],
-                            cond
-                        )
-                    conditions.append(cond)
-                r.conditions = conditions
-                # action
-                if form_action.cleaned_data['action_type'] != r.action.type or \
-                        form_action.cleaned_data['action_type'] != procmail.ActionNested.type:
-                    r.action = procmail.Action.from_type(
-                        form_action.cleaned_data['action_type']
-                    )(*form_action.params)
-                if create:
-                    utils.set_procmailrc(request.user, procmailrc)
-                    return redirect("procmail:create", id=id)
-                utils.set_procmailrc(request.user, procmailrc)
-                return redirect("procmail:edit", id=id)
-
-
-def do_edit_assignment(request, id, r, procmailrc, form_meta, form_assignment, delete=False):
-            if r is None:
-                r = procmail.Assignment([])
-                r.parent = get_rule(procmailrc, id)
-                id = r.parent.append(r)
-            if delete:
-                return redirect("procmail:delete", id=id, view_name="edit")
-            elif form_meta.is_valid() and form_assignment.is_valid():
-                r.meta_title = form_meta.cleaned_data['title']
-                r.meta_comment = form_meta.cleaned_data['comment']
-                r.variables = form_assignment.variables
-                utils.set_procmailrc(request.user, procmailrc)
-                return redirect("procmail:edit", id=id)
-
-
-def get_rule(procmailrc, id):
-    ids = id.split('.')
-    print "%r" % id
-    if id == "":
-        return procmailrc
-    r = procmailrc
-    try:
-        for i in ids:
-            r = r[int(i)]
-    except (TypeError, IndexError):
-        raise Http404()
-    return r
-
-
 def parse_error(request, error):
     error_msg = _("""Fail to parse your procmailrc. You probably have a syntax error
 near %(line)s at line %(lineno)s, column %(col)s.""") % {
@@ -311,7 +190,11 @@ near %(line)s at line %(lineno)s, column %(col)s.""") % {
         'lineno': error.lineno,
         'col': error.col
     }
-    return render(request, "procmail/parse_error.html", utils.context({'error_msg': error_msg, 'error': error}))
+    return render(
+        request,
+        "procmail/parse_error.html",
+        utils.context({'error_msg': error_msg, 'error': error})
+    )
 
 
 @login_required
@@ -322,7 +205,10 @@ def edit_simple(request, id):
         procmailrc = utils.get_procmailrc(request.user)
     except ParseException as error:
         return parse_error(request, error)
-    r = get_rule(procmailrc, id)
+    try:
+        r = procmailrc[id]
+    except KeyError:
+        raise Http404()
     if not r.django['is_simple']:
         return redirect("procmail:edit", id=id)
 
@@ -395,94 +281,68 @@ def edit(request, id):
         procmailrc = utils.get_procmailrc(request.user)
     except ParseException as error:
         return parse_error(request, error)
-    r = get_rule(procmailrc, id)
+    try:
+        r = procmailrc[id]
+    except KeyError:
+        raise Http404()
 
     params = {"procmailrc": procmailrc, "curr_stmt": r}
     if request.method == 'POST':
         if r.is_recipe():
-            form_meta = forms.MetaForm(
+            params["form_meta"] = forms.MetaForm(request.POST, statement=r, prefix="meta")
+            params["form_header"] = forms.HeaderForm(request.POST, header=r.header, prefix="header")
+            params["form_action"] = forms.ActionForm(request.POST, action=r.action, prefix="action")
+            params["form_condition"] = forms.ConditionFormSet(
                 request.POST,
-                initial=forms_initial.meta_form(r),
-                prefix="meta"
-            )
-            form_header = forms.HeaderForm(
-                request.POST,
-                initial=forms_initial.header_form(r),
-                prefix="header"
-            )
-            form_action = forms.ActionForm(
-                request.POST,
-                initial=forms_initial.action_form(r),
-                prefix="action"
-            )
-            form_condition = forms.ConditionFormSet(
-                request.POST,
-                initial=forms_initial.conditions_form(r.conditions),
+                conditions=r.conditions,
                 prefix="condition"
             )
-            params["form_meta"] = form_meta
-            params["form_header"] = form_header
-            params["form_action"] = form_action
-            params["form_condition"] = form_condition
-            ret = do_edit_recipe(
-                request,
-                id,
-                r,
-                procmailrc,
-                form_meta,
-                form_header,
-                form_condition,
-                form_action,
-                create=("action_add" in request.POST),
-                delete=("delete_stmt" in request.POST)
-            )
-            if ret:
-                return ret
+            if "delete_stmt" in request.POST:
+                return redirect("procmail:delete", id=id, view_name="edit")
+            elif all(form.is_valid() for key, form in params.items() if key.startswith("form_")):
+                utils.update_recipe(
+                    r,
+                    params["form_meta"].cleaned_data['title'],
+                    params["form_meta"].cleaned_data['comment'],
+                    params["form_header"].header,
+                    params["form_action"].action,
+                    params["form_condition"].conditions
+                )
+                utils.set_procmailrc(request.user, procmailrc)
+                if "action_add" in request.POST:
+                    return redirect("procmail:create", id=id)
+                else:
+                    return redirect("procmail:edit", id=id)
         elif r.is_assignment():
-            form_meta = forms.MetaForm(
+            params["form_meta"] = forms.MetaForm(request.POST, statement=r, prefix="meta")
+            params["form_assignment"] = forms.AssignmentFormSet(
                 request.POST,
-                initial=forms_initial.meta_form(r),
-                prefix="meta"
-            )
-            form_assignment = forms.AssignmentFormSet(
-                request.POST,
-                initial=forms_initial.assignment_form(r),
+                assignment=r,
                 prefix="assignment"
             )
-            params["form_meta"] = form_meta
-            params["form_assignment"] = form_assignment
-            ret = do_edit_assignment(
-                request,
-                id,
-                r,
-                procmailrc,
-                form_meta,
-                form_assignment,
-                delete=("delete_stmt" in request.POST)
-            )
-            if ret:
-                return ret
+            if "delete_stmt" in request.POST:
+                return redirect("procmail:delete", id=id, view_name="edit")
+            elif all(form.is_valid() for key, form in params.items() if key.startswith("form_")):
+                utils.update_assignment(
+                    r,
+                    params["form_meta"].cleaned_data['title'],
+                    params["form_meta"].cleaned_data['comment'],
+                    params["form_assignment"].variables
+                )
+                utils.set_procmailrc(request.user, procmailrc)
+                return redirect("procmail:edit", id=id)
     else:
         if r.is_recipe():
-            form_meta = forms.MetaForm(initial=forms_initial.meta_form(r), prefix="meta")
-            form_header = forms.HeaderForm(initial=forms_initial.header_form(r), prefix="header")
-            form_action = forms.ActionForm(initial=forms_initial.action_form(r), prefix="action")
-            form_condition = forms.ConditionFormSet(
-                initial=forms_initial.conditions_form(r.conditions),
+            params["form_meta"] = forms.MetaForm(statement=r, prefix="meta")
+            params["form_header"] = forms.HeaderForm(header=r.header, prefix="header")
+            params["form_action"] = forms.ActionForm(action=r.action, prefix="action")
+            params["form_condition"] = forms.ConditionFormSet(
+                conditions=r.conditions,
                 prefix="condition"
             )
-            params["form_meta"] = form_meta
-            params["form_header"] = form_header
-            params["form_action"] = form_action
-            params["form_condition"] = form_condition
         elif r.is_assignment():
-            form_meta = forms.MetaForm(initial=forms_initial.meta_form(r), prefix="meta")
-            form_assignment = forms.AssignmentFormSet(
-                initial=forms_initial.assignment_form(r),
-                prefix="assignment"
-            )
-            params["form_meta"] = form_meta
-            params["form_assignment"] = form_assignment
+            params["form_meta"] = forms.MetaForm(statement=r, prefix="meta")
+            params["form_assignment"] = forms.AssignmentFormSet(assignment=r, prefix="assignment")
     return render(request, "procmail/edit.html", utils.context(params))
 
 

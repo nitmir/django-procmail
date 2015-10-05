@@ -11,6 +11,7 @@
 # (c) 2015 Valentin Samir
 from django.conf import settings
 from django.core.cache import caches
+from django.http import Http404
 
 import os
 import shutil
@@ -119,6 +120,7 @@ def process_procmailrc(procmailrc, key):
     procmailrc.django['flat'] = flat
     procmailrc.django['key'] = key
 
+
 def procmailrc_key(username, path):
     key = "%s-%s-%s" % (
         username,
@@ -126,6 +128,7 @@ def procmailrc_key(username, path):
         os.path.getsize(path)
     )
     return hashlib.sha1(key.encode("utf-8", errors='replace')).hexdigest()
+
 
 def get_procmailrc(user):
     procmailrc_path = get_procmailrc_path(user)
@@ -186,10 +189,10 @@ def unoring(conditions):
     else:
         for cond in conditions:
             if (
-                cond.is_score()
-                and int(cond.x) == settings.PROCMAIL_OR_SCORE
-                and int(cond.y) == 0
-                and is_simple_condition(cond.condition)
+                cond.is_score() and
+                int(cond.x) == settings.PROCMAIL_OR_SCORE and
+                int(cond.y) == 0 and
+                is_simple_condition(cond.condition)
             ):
                 conds.append(cond.condition)
             else:
@@ -276,6 +279,40 @@ def show_init(self):
         for field_name, field in form.fields.items():
             field.show = show(self, field_name)
     return ""
+
+
+def make_recipe(procmailrc, parent_id):
+    r = procmail.Recipe(procmail.Header(), procmail.Action())
+    try:
+        r.parent = procmailrc[parent_id]
+        r.parent.append(r)
+        return r
+    except KeyError:
+        raise Http404()
+
+
+def make_assignment(procmailrc, parent_id):
+    r = procmail.Assignment()
+    try:
+        r.parent = procmailrc[parent_id]
+        r.parent.append(r)
+        return r
+    except KeyError:
+        raise Http404()
+
+
+def update_recipe(recipe, title, comment, header, action, conditions):
+    recipe.header = header
+    recipe.action = action
+    recipe.conditions = conditions
+    recipe.meta_title = title
+    recipe.meta_comment = comment
+
+
+def update_assignment(assignement, title, comment, variables):
+    assignement.meta_title = title
+    assignement.meta_comment = comment
+    assignement.variables = variables
 
 
 def make_simple_rules(kind, title, comment, statements, conditions):

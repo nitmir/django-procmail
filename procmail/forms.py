@@ -17,18 +17,27 @@ import re
 import collections
 
 import utils
+import forms_initial
 from pyprocmail import procmail
 
 
 forms.Field.set_extra = utils.set_extra
 forms.Field.extra = {}
 
+
 class DeleteStatement(forms.Form):
     def __init__(self, *args, **kwargs):
         self.statement = kwargs.pop('statement', None)
         super(DeleteStatement, self).__init__(*args, **kwargs)
 
+
 class MetaForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        statement = kwargs.pop('statement', None)
+        if statement is not None:
+            kwargs['initial'] = forms_initial.meta_form(statement)
+        super(MetaForm, self).__init__(*args, **kwargs)
+
     title = forms.CharField(label=_('title'), max_length=100)
     comment = forms.CharField(label=_('comment'), max_length=256, required=False)
 
@@ -271,26 +280,12 @@ SimpleActionSet = formset_factory(
 )
 
 
-class AssignmentBaseFormSet(BaseFormSet):
-    def clean(self):
-        variables = []
-        for form in self.forms:
-            if 'variable_name' in form.cleaned_data and not form.cleaned_data.get('DELETE', False):
-                variables.append(
-                    (
-                        form.cleaned_data['variable_name'],
-                        form.cleaned_data.get('value', None),
-                        form.cleaned_data.get('quote', None)
-                    )
-                )
-        if not variables:
-            raise forms.ValidationError(
-                _("You need at least one assignement on a assignement satement")
-            )
-        self.variables = variables
-
-
 class HeaderForm(forms.Form, utils.HidableFieldsForm):
+
+    def __init__(self, *args, **kwargs):
+        self.header = kwargs.pop('header', procmail.Header())
+        kwargs['initial'] = forms_initial.header_form(self.header)
+        super(HeaderForm, self).__init__(*args, **kwargs)
 
     H = forms.BooleanField(
         label=_("Flag H"),
@@ -319,9 +314,9 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     c = forms.BooleanField(
         label=_("Flag c"),
         help_text=_(
-            "Clone message and execute the action(s) in a subprocess if the "
-            + "conditions match. The parent process continues with the original "
-            + "message after the clone process finishes."
+            "Clone message and execute the action(s) in a subprocess if the " +
+            "conditions match. The parent process continues with the original " +
+            "message after the clone process finishes."
         ),
         required=False,
         initial=False
@@ -335,8 +330,8 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     a = forms.BooleanField(
         label=_("Flag a"),
         help_text=_(
-            "Execute this recipe if the previous recipe's conditions were "
-            + "met and its action(s) were completed successfully."
+            "Execute this recipe if the previous recipe's conditions were " +
+            "met and its action(s) were completed successfully."
         ),
         required=False,
         initial=False
@@ -350,8 +345,8 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     e = forms.BooleanField(
         label=_("Flag e"),
         help_text=_(
-            "Execute this recipe if the previous recipe's conditions were met, "
-            + "but its action(s) couldn't be completed."
+            "Execute this recipe if the previous recipe's conditions were met, " +
+            "but its action(s) couldn't be completed."
         ),
         required=False,
         initial=False
@@ -359,9 +354,9 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     f = forms.BooleanField(
         label=_("Flag f"),
         help_text=_(
-            "Feed the message to the pipeline on the action line if the conditions are met, "
-            + "and continue processing with the output of the pipeline "
-            + "(replacing the original message)."
+            "Feed the message to the pipeline on the action line if the conditions are met, " +
+            "and continue processing with the output of the pipeline " +
+            "(replacing the original message)."
         ),
         required=False,
         initial=False
@@ -369,9 +364,9 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     i = forms.BooleanField(
         label=_("Flag i"),
         help_text=_(
-            "Suppress error checking when writing to a pipeline. "
-            + "This is typically used to get rid of SIGPIPE errors when the pipeline doesn't "
-            + "eat all of the input Procmail wants to feed it."
+            "Suppress error checking when writing to a pipeline. " +
+            "This is typically used to get rid of SIGPIPE errors when the pipeline doesn't " +
+            "eat all of the input Procmail wants to feed it."
         ),
         required=False,
         initial=False
@@ -379,8 +374,8 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     r = forms.BooleanField(
         label=_("Flag r"),
         help_text=_(
-            """Raw mode: Don't do any "fixing" of the original message when writing it out """
-            + "(such as adding a final newline if the message didn't have one originally)."
+            """Raw mode: Don't do any "fixing" of the original message when writing it out """ +
+            "(such as adding a final newline if the message didn't have one originally)."
         ),
         required=False,
         initial=False
@@ -388,8 +383,8 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     w = forms.BooleanField(
         label=_("Flag w"),
         help_text=_(
-            "Wait for the program in the action line to finish before continuing. "
-            + "Otherwise, Procmail will spawn off the program and leave it executing on its own."
+            "Wait for the program in the action line to finish before continuing. " +
+            "Otherwise, Procmail will spawn off the program and leave it executing on its own."
         ),
         required=False,
         initial=False
@@ -397,8 +392,8 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     W = forms.BooleanField(
         label=_("Flag W"),
         help_text=_(
-            """Like w, but additionally suppresses any "program failure" messages """
-            + "from the action pipeline."
+            """Like w, but additionally suppresses any "program failure" messages """ +
+            "from the action pipeline."
         ),
         required=False,
         initial=False
@@ -406,8 +401,8 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
     D = forms.BooleanField(
         label=_("Flag D"),
         help_text=_(
-            'Pay attention to character case when matching: "a" is treated as distinct from '
-            + '"A" and so on. Some of the special macros are always matched case-insensitively.'
+            'Pay attention to character case when matching: "a" is treated as distinct from ' +
+            '"A" and so on. Some of the special macros are always matched case-insensitively.'
         ),
         required=False,
         initial=False
@@ -430,8 +425,39 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
                 _("Please put at least the flag H or B or the recipe will nether match")
             )
 
+        self.header.H = self.cleaned_data['H']
+        self.header.B = self.cleaned_data['B']
+        self.header.h = self.cleaned_data['h']
+        self.header.b = self.cleaned_data['b']
+        self.header.c = self.cleaned_data['c']
+        self.header.A = self.cleaned_data['A']
+        self.header.a = self.cleaned_data['a']
+        self.header.E = self.cleaned_data['E']
+        self.header.e = self.cleaned_data['e']
+        self.header.f = self.cleaned_data['f']
+        self.header.i = self.cleaned_data['i']
+        self.header.r = self.cleaned_data['r']
+        self.header.w = self.cleaned_data['w']
+        self.header.W = self.cleaned_data['W']
+        self.header.D = self.cleaned_data['D']
+        if self.cleaned_data['lockfile']:
+            if self.cleaned_data['lockfile_path']:
+                self.header.lockfile = self.cleaned_data['lockfile_path']
+            else:
+                self.header.lockfile = True
+        else:
+            self.header.lockfile = False
+
 
 class ActionForm(forms.Form, utils.HidableFieldsForm):
+
+    def __init__(self, *args, **kwargs):
+        self.action = kwargs.pop('action', None)
+        if self.action:
+            kwargs['initial'] = forms_initial.action_form(self.action)
+        super(ActionForm, self).__init__(*args, **kwargs)
+
+    action = None
 
     action_type = forms.ChoiceField(
         label=_('Action type'),
@@ -459,19 +485,48 @@ class ActionForm(forms.Form, utils.HidableFieldsForm):
                 procmail.ActionSave.type,
                 procmail.ActionShell.type
         ]:
-            self.params = (self.cleaned_data["action_param"],)
+            params = (self.cleaned_data["action_param"],)
         elif self.cleaned_data["action_type"] == procmail.ActionForward.type:
             param = self.cleaned_data["action_param"]
             if ',' in param:
                 param = param.split(',')
             else:
                 param = param.split()
-            self.params = ([p.strip() for p in param],)
+            params = ([p.strip() for p in param],)
         elif self.cleaned_data["action_type"] == procmail.ActionNested.type:
-            self.params = []
+            params = []
+
+        if (
+            self.cleaned_data['action_type'] != procmail.ActionNested.type or
+            self.action is None or
+            self.cleaned_data['action_type'] != self.action.type
+        ):
+            self.action = procmail.Action.from_type(
+                self.cleaned_data['action_type']
+            )(*params)
+
+
+class ConditionBaseFormSet(BaseFormSet):
+
+    conditions = None
+
+    def __init__(self, *args, **kwargs):
+        self.conditions = kwargs.pop('conditions', [])
+        kwargs['initial'] = forms_initial.conditions_form(self.conditions)
+        super(ConditionBaseFormSet, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        conditions = []
+        for form in self.forms:
+            if form.condition is not None:
+                conditions.append(form.condition)
+        self.conditions = conditions
 
 
 class ConditionForm(forms.Form):
+
+    condition = None
+
     type = forms.TypedChoiceField(
         label=_('condition type'),
         choices=[
@@ -547,7 +602,7 @@ class ConditionForm(forms.Form):
                         "Condition %s parameter must be of the shape (<|>) number"
                     ) % self.cleaned_data["type"]
                 )
-            self.params = (sign, size)
+            params = (sign, size)
         else:
             if self.cleaned_data["type"] == procmail.ConditionRegex.type:
                 try:
@@ -556,10 +611,63 @@ class ConditionForm(forms.Form):
                     raise forms.ValidationError(
                         _("Param is not a valid regular expression : %s") % e
                     )
-            self.params = (param, )
+            params = (param, )
 
         if self.cleaned_data["substitute"] and self.cleaned_data["substitute_counter"] < 1:
             raise forms.ValidationError(_("substitute counter must be >= 1"))
+
+        if self.cleaned_data.get('DELETE', False) or not self.cleaned_data.get('type'):
+            self.condition = None
+        else:
+            condition = procmail.Condition.from_type(self.cleaned_data['type'])(*params)
+            if self.cleaned_data['negate']:
+                condition = procmail.ConditionNegate(condition)
+            if self.cleaned_data['score']:
+                condition = procmail.ConditionScore(
+                    self.cleaned_data['score_x'],
+                    self.cleaned_data['score_y'],
+                    condition
+                )
+            if self.cleaned_data['substitute']:
+                for i in range(self.cleaned_data['substitute_counter']):
+                    condition = procmail.ConditionSubstitute(condition)
+            if self.cleaned_data['variable']:
+                condition = procmail.ConditionVariable(
+                                self.cleaned_data['variable_name'],
+                                condition
+                            )
+            self.condition = condition
+
+
+class AssignmentBaseFormSet(BaseFormSet):
+
+    variables = None
+
+    def __init__(self, *args, **kwargs):
+        assignment = kwargs.pop('assignment', None)
+        if assignment is not None:
+            kwargs['initial'] = forms_initial.assignment_form(assignment)
+            self.variables = assignment.variables
+        else:
+            self.variables = []
+        super(AssignmentBaseFormSet, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        variables = []
+        for form in self.forms:
+            if 'variable_name' in form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                variables.append(
+                    (
+                        form.cleaned_data['variable_name'],
+                        form.cleaned_data.get('value', None),
+                        form.cleaned_data.get('quote', None)
+                    )
+                )
+        if not variables:
+            raise forms.ValidationError(
+                _("You need at least one assignement on a assignement satement")
+            )
+        self.variables = variables
 
 
 class AssignmentForm(forms.Form):
@@ -598,7 +706,12 @@ AssignmentFormSet = formset_factory(
     formset=AssignmentBaseFormSet,
     can_delete=True
 )
-ConditionFormSet = formset_factory(ConditionForm, extra=1, can_delete=True)
+ConditionFormSet = formset_factory(
+    ConditionForm,
+    extra=1,
+    formset=ConditionBaseFormSet,
+    can_delete=True
+)
 
 
 class StatementForm(forms.Form):

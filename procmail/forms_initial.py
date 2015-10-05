@@ -92,8 +92,8 @@ def simple_recipe(r):
                         if not all(utils.is_simple_statement(s) for s in stmt):
                             raise exceptions.NonSimple()
                     elif not stmt.is_recipe() or (
-                        not stmt.action.is_save()
-                        and not stmt.action.is_forward()
+                        not stmt.action.is_save() and
+                        not stmt.action.is_forward()
                     ):
                         raise exceptions.NonSimple()
                     try:
@@ -334,38 +334,38 @@ def meta_form(obj):
     }
 
 
-def header_form(recipe):
-    lockfile = recipe.header.lockfile
+def header_form(header):
+    lockfile = header.lockfile
     return {
-        'H': recipe.header.H,
-        'B': recipe.header.B,
-        'h': recipe.header.h,
-        'b': recipe.header.b,
-        'c': recipe.header.c,
-        'A': recipe.header.A,
-        'a': recipe.header.a,
-        'E': recipe.header.E,
-        'e': recipe.header.e,
-        'f': recipe.header.f,
-        'i': recipe.header.i,
-        'r': recipe.header.r,
-        'w': recipe.header.w,
-        'W': recipe.header.W,
-        'D': recipe.header.D,
+        'H': header.H,
+        'B': header.B,
+        'h': header.h,
+        'b': header.b,
+        'c': header.c,
+        'A': header.A,
+        'a': header.a,
+        'E': header.E,
+        'e': header.e,
+        'f': header.f,
+        'i': header.i,
+        'r': header.r,
+        'w': header.w,
+        'W': header.W,
+        'D': header.D,
 
         'lockfile': True if lockfile else False,
         'lockfile_path': "" if isinstance(lockfile, bool) else lockfile,
     }
 
 
-def action_form(recipe):
+def action_form(action):
     init = {
-        'action_type': recipe.action.type,
+        'action_type': action.type,
     }
-    if recipe.action.is_save():
-        init['action_param'] = recipe.action.path
-    if recipe.action.is_forward():
-        init['action_param'] = " ".join(recipe.action.recipients)
-    if recipe.action.is_shell():
-        init['action_param'] = recipe.action.cmd
+    if action.is_save():
+        init['action_param'] = action.path
+    if action.is_forward():
+        init['action_param'] = " ".join(action.recipients)
+    if action.is_shell():
+        init['action_param'] = action.cmd
     return init
