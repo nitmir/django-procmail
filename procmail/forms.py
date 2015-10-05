@@ -633,9 +633,9 @@ class ConditionForm(forms.Form):
                     condition = procmail.ConditionSubstitute(condition)
             if self.cleaned_data['variable']:
                 condition = procmail.ConditionVariable(
-                                self.cleaned_data['variable_name'],
-                                condition
-                            )
+                    self.cleaned_data['variable_name'],
+                    condition
+                )
             self.condition = condition
 
 

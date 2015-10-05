@@ -158,6 +158,7 @@ class CreateStatement(SessionWizardView):
                 r.parent = procmailrc[self.kwargs['id']]
             except KeyError:
                 raise Http404()
+            r.parent.append(r)
             utils.set_procmailrc(self.request.user, procmailrc)
             return redirect("procmail:edit_simple", id=r.id)
 
