@@ -137,9 +137,10 @@ def do_simple(request, id, r, procmailrc, form_meta, form_cond_kind, form_cond, 
         statements,
         form_cond.conditions if form_cond else None
     )
-    procmailrc.append(r)
+    r.parent = get_rule(procmailrc, id)
+    id = r.parent.append(r)
     utils.set_procmailrc(request.user, procmailrc)
-    return redirect("procmail:index")
+    return redirect("procmail:edit_simple", id=id)
 
 
 @login_required
@@ -178,13 +179,12 @@ def do_edit_recipe(
             if r is None:
                 r = procmail.Recipe(procmail.Header(), procmail.Action())
                 r.parent = get_rule(procmailrc, id)
-                r.parent.append(r)
-                if id:
-                    r.id = "%s.%s" % (id, len(r.parent) - 1)
-                else:
-                    r.id = "%s" % (len(r.parent) - 1)
-                id = r.id
-            if form_meta.is_valid() and form_header.is_valid() \
+                id = r.parent.append(r)
+            if delete:
+                r.parent.remove(r)
+                utils.set_procmailrc(request.user, procmailrc)
+                return redirect("procmail:edit", id=r.parent.id)
+            elif form_meta.is_valid() and form_header.is_valid() \
                     and form_action.is_valid() and form_condition.is_valid():
                 # header
                 r.header.H = form_header.cleaned_data['H']
@@ -246,10 +246,6 @@ def do_edit_recipe(
                 if create:
                     utils.set_procmailrc(request.user, procmailrc)
                     return redirect("procmail:create", id=id)
-                if delete:
-                    r.parent.remove(r)
-                    utils.set_procmailrc(request.user, procmailrc)
-                    return redirect("procmail:edit", id=".".join(id.split('.')[:-1]))
                 utils.set_procmailrc(request.user, procmailrc)
                 return redirect("procmail:edit", id=id)
 
@@ -258,23 +254,17 @@ def do_edit_assignment(request, id, r, procmailrc, form_meta, form_assignment, d
             if r is None:
                 r = procmail.Assignment([])
                 r.parent = get_rule(procmailrc, id)
-                r.parent.append(r)
-                if id:
-                    r.id = "%s.%s" % (id, len(r.parent) - 1)
-                else:
-                    r.id = "%s" % (len(r.parent) - 1)
-                id = r.id
-            if form_meta.is_valid() and form_assignment.is_valid():
+                id = r.parent.append(r)
+            if delete:
+                r.parent.remove(r)
+                utils.set_procmailrc(request.user, procmailrc)
+                return redirect("procmail:edit", id=r.parent.id)
+            elif form_meta.is_valid() and form_assignment.is_valid():
                 r.meta_title = form_meta.cleaned_data['title']
                 r.meta_comment = form_meta.cleaned_data['comment']
-                if not delete and form_assignment.variables:
-                    r.variables = form_assignment.variables
-                    utils.set_procmailrc(request.user, procmailrc)
-                    return redirect("procmail:edit", id=id)
-                else:
-                    r.parent.remove(r)
-                    utils.set_procmailrc(request.user, procmailrc)
-                    return redirect("procmail:edit", id=".".join(id.split('.')[:-1]))
+                r.variables = form_assignment.variables
+                utils.set_procmailrc(request.user, procmailrc)
+                return redirect("procmail:edit", id=id)
 
 
 def get_rule(procmailrc, id):
@@ -336,8 +326,11 @@ def edit_simple(request, id):
             initial=initials['actions'],
             prefix="actions"
         )
-
-        if all(form.is_valid() for form in [form_meta, form_cond_kind, form_cond, form_action]):
+        if "delete_stmt" in request.POST:
+            r.parent.remove(r)
+            utils.set_procmailrc(request.user, procmailrc)
+            return redirect("procmail:edit_simple", id=r.parent.id)
+        elif all(form.is_valid() for form in [form_meta, form_cond_kind, form_cond, form_action]):
             kind = form_cond_kind.cleaned_data["kind"]
             statements = form_action.statements
             title = form_meta.cleaned_data["title"]
