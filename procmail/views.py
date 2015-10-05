@@ -181,9 +181,9 @@ def do_edit_recipe(
                 r.parent = get_rule(procmailrc, id)
                 id = r.parent.append(r)
             if delete:
-                r.parent.remove(r)
+                id = r.delete()
                 utils.set_procmailrc(request.user, procmailrc)
-                return redirect("procmail:edit", id=r.parent.id)
+                return redirect("procmail:edit", id=id)
             elif form_meta.is_valid() and form_header.is_valid() \
                     and form_action.is_valid() and form_condition.is_valid():
                 # header
@@ -256,9 +256,9 @@ def do_edit_assignment(request, id, r, procmailrc, form_meta, form_assignment, d
                 r.parent = get_rule(procmailrc, id)
                 id = r.parent.append(r)
             if delete:
-                r.parent.remove(r)
+                id = r.delete()
                 utils.set_procmailrc(request.user, procmailrc)
-                return redirect("procmail:edit", id=r.parent.id)
+                return redirect("procmail:edit", id=id)
             elif form_meta.is_valid() and form_assignment.is_valid():
                 r.meta_title = form_meta.cleaned_data['title']
                 r.meta_comment = form_meta.cleaned_data['comment']
@@ -327,9 +327,9 @@ def edit_simple(request, id):
             prefix="actions"
         )
         if "delete_stmt" in request.POST:
-            r.parent.remove(r)
+            id = r.delete()
             utils.set_procmailrc(request.user, procmailrc)
-            return redirect("procmail:edit_simple", id=r.parent.id)
+            return redirect("procmail:edit_simple", id=id)
         elif all(form.is_valid() for form in [form_meta, form_cond_kind, form_cond, form_action]):
             kind = form_cond_kind.cleaned_data["kind"]
             statements = form_action.statements
