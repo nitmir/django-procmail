@@ -281,8 +281,8 @@ def show_init(self):
 def make_simple_rules(kind, title, comment, statements, conditions):
     if kind == "all":
         if len(statements) == 1 and statements[0].is_recipe():
+            header = statements[0].header
             action = statements[0].action
-            header = procmail.Header()
             recipe = procmail.Recipe(header, action)
         elif len(statements) == 1 and statements[0].is_assignment():
             recipe = statements[0]
@@ -303,6 +303,7 @@ def make_simple_rules(kind, title, comment, statements, conditions):
         else:
             condition = []
         if len(statements) == 1 and statements[0].is_recipe():
+            header = statements[0].header
             action = statements[0].action
         else:
             action = procmail.ActionNested(statements)
@@ -329,6 +330,7 @@ def make_simple_rules(kind, title, comment, statements, conditions):
         else:
             condition = []
         if len(statements) == 1 and statements[0].is_recipe():
+            header = statements[0].header
             action = statements[0].action
         else:
             action = procmail.ActionNested(statements)
@@ -340,6 +342,7 @@ def make_simple_rules(kind, title, comment, statements, conditions):
                 setattr(header, letter, True)
             header.E = True
             if len(statements) == 1 and statements[0].is_recipe():
+                header = statements[0].header
                 action = statements[0].action
             else:
                 action = procmail.ActionNested(statements)
