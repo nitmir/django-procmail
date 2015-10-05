@@ -48,13 +48,13 @@ def wizard_switch_by_kinds(kinds):
 
 
 def escape_re(string):
-    for char in config.REGEX_CHARS:
+    for char in '\\' + config.REGEX_CHARS:
         string = string.replace(char, '\\%s' % char)
     return string
 
 
 def unescape_re(string):
-    for char in config.REGEX_CHARS:
+    for char in config.REGEX_CHARS + '\\':
         string = string.replace('\\%s' % char, char)
     return string
 
