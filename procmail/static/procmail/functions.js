@@ -23,31 +23,33 @@ function on_move(current_view_name, curr_parent_id, curr_id, parent_id, old_inde
 
 
 function on_list_update(current_view_name, curr_parent_id, curr_id, evt){
-    var parent_id = $(evt.item).children("div:first").data("parentid");
-    reverse(
-        "procmail:move",
-        args=[evt.oldIndex, evt.newIndex, parent_id]
-    ).fail(function() {
-        alert( "error" );
-        document.location.hash = '#scroll=' + document.body.scrollTop;
-        window.location.reload();
-    }).done(function(data) {
-        $.ajax(data).done(
-            function() {
-                on_move(
-                    current_view_name,
-                    curr_parent_id,
-                    curr_id, parent_id,
-                    evt.oldIndex,
-                    evt.newIndex
-                );
-            }
+    if(evt.oldIndex != evt.newIndex){
+        var parent_id = $(evt.item).children("div:first").data("parentid");
+        reverse(
+            "procmail:move",
+            args=[evt.oldIndex, evt.newIndex, parent_id]
         ).fail(function() {
             alert( "error" );
             document.location.hash = '#scroll=' + document.body.scrollTop;
             window.location.reload();
+        }).done(function(data) {
+            $.ajax(data).done(
+                function() {
+                    on_move(
+                        current_view_name,
+                        curr_parent_id,
+                        curr_id, parent_id,
+                        evt.oldIndex,
+                        evt.newIndex
+                    );
+                }
+            ).fail(function() {
+                alert( "error" );
+                document.location.hash = '#scroll=' + document.body.scrollTop;
+                window.location.reload();
+            });
         });
-    });
+    }
 }
 
 function getUrlHashParameter(sParam) {
