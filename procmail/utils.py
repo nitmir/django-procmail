@@ -94,11 +94,12 @@ def detect_charset(path):
         return result['encoding']
 
 
-def context(cntxt):
+def context(request, cntxt):
     base = {
         'PROCMAIL_INPLACE': settings.PROCMAIL_INPLACE,
         'PROCMAIL_DEBUG_DIR': settings.PROCMAIL_DEBUG_DIR,
         'PROCMAIL_OR_SCORE': settings.PROCMAIL_OR_SCORE,
+        'current_view_name': "%s:%s" % (request.resolver_match.namespace, request.resolver_match.url_name),
     }
     base.update(cntxt)
     return base
@@ -113,6 +114,12 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
     if flat is None:
         flat = []
     for r in rules:
+        if r.is_comment():
+            continue
+        if in_simple:
+            flat.append("in_item_simple")
+        else:
+            flat.append("in_item")
         flat.append(r)
         if r.is_recipe() or r.is_assignment():
             try:
@@ -126,11 +133,21 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
             except exceptions.NonSimple:
                 r.django = {'is_simple': False, 'in_simple': in_simple}
             if r.is_recipe() and r.action.is_nested():
-                flat.append("in")
+                if in_simple or r.django['is_simple']:
+                    flat.append("in_list_simple")
+                else:
+                    flat.append("in_list")
                 _process_procmailrc(r.action, flat, in_simple or r.django['is_simple'])
-                flat.append("out")
+                if in_simple or r.django['is_simple']:
+                    flat.append("out_list_simple")
+                else:
+                    flat.append("out_list")
         else:
             r.django = {'is_simple': False, 'in_simple': in_simple}
+        if in_simple:
+            flat.append("out_item_simple")
+        else:
+            flat.append("out_item")
     return flat
 
 

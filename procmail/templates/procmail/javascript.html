@@ -1,0 +1,19 @@
+<script>
+function reverse(view_name, args, kwargs){
+    return $.ajax(
+        "{% url "procmail:reverse" %}",
+        {   
+            method: "POST",
+            data: {view_name:view_name, args:JSON.stringify(args), kwargs:JSON.stringify(kwargs)}
+        }
+    );
+}
+
+var curr_parent_id = "{{curr_stmt.parent.id}}";
+var curr_id;
+try{
+  curr_id = "{{curr_stmt.id}}".substring("{{curr_stmt.id}}".lastIndexOf(".") + 1);
+}catch(e){
+  curr_id = "{{curr_stmt.id}}";
+}
+</script>

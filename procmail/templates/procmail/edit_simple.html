@@ -1,16 +1,16 @@
-{% extends "procmail/base.html" %}
+{% extends "procmail/base.dtl" %}
 {% load i18n %}
 {% block content %}
   <h1>{% trans "Simple editor" %}</h1>
   <form action="" method="post">
     {% csrf_token %}
     <h2>{% trans "Metadata" %}</h2>
-    {% include "procmail/form.html" with form=form_meta %}
+    {% include "procmail/form.dtl" with form=form_meta %}
     <h2>{% trans "Conditions" %}</h2>
-    {% include "procmail/form.html" with form=form_cond_kind %}
-    {% include "procmail/form.html" with form=form_cond %}
+    {% include "procmail/form.dtl" with form=form_cond_kind %}
+    {% include "procmail/form.dtl" with form=form_cond %}
     <h2>{% trans "Actions" %}</h2>
-    {% include "procmail/form.html" with form=form_action %}
+    {% include "procmail/form.dtl" with form=form_action %}
 
     <input type="submit" value="{% trans "Submit" %}" class="btn btn-primary"/>
     <input 

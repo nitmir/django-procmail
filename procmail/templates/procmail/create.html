@@ -1,4 +1,4 @@
-{% extends "procmail/base.html" %}
+{% extends "procmail/base.dtl" %}
 {% load i18n %}
 {% block content %}
   {{ wizard.form.media }}
@@ -16,7 +16,7 @@
   <form action="" method="post">
     {% csrf_token %}
     {{ wizard.management_form }}
-    {% include "procmail/form.html" with form=wizard.form %}
+    {% include "procmail/form.dtl" with form=wizard.form %}
     {% if wizard.steps.prev %}
       <button
         name="wizard_goto_step"

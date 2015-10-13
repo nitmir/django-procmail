@@ -1,20 +1,42 @@
 {% load cache %}
-<ul>
+{% load i18n %}
+<div class="panel-collapse">
+<ul id="procmailrc" class="sortable list-group">
   {% for stmt in procmailrc.django.flat %}{% spaceless %}
-    {% if stmt == "in" %}
-      <ul>
-    {% elif stmt == "out" %}
+    {% if stmt == "in_list" %}
+      <ul class="sortable list-group">
+    {% elif stmt == "out_list" %}
       </ul>
+    {% elif stmt == "in_list_simple" %}
+      {% if not simple %}
+        <ul class="sortable list-group">
+      {% endif %}
+    {% elif stmt == "out_list_simple" %}
+      {% if not simple %}
+        </ul>
+      {% endif %}
+    {% elif stmt == "in_item" %}
+      <li class="list-group-item">
+    {% elif stmt == "out_item" %}
+      </li>
+    {% elif stmt == "in_item_simple" %}
+      {% if not simple %}
+        <li class="list-group-item">
+      {% endif %}
+    {% elif stmt == "out_item_simple" %}
+      {% if not simple %}
+        </li>
+      {% endif %}
     {% elif stmt.is_comment %}
     {% elif not simple or not stmt.django.in_simple %}
-      <li>
+      <div data-parentid="{{stmt.parent.id}}" id="id_{{stmt.id}}">
         {% if not stmt.is_first %}
-          <a href="{% url "procmail:up" stmt.id curr_stmt.id%}">
+          <a href="{% url "procmail:up" stmt.id curr_stmt.id%}" class="up_down">
             <i title="move up" class="fa fa-caret-up"></i>
           </a>
         {% endif %}
         {% if not stmt.is_last %}
-          <a href="{% url "procmail:down" stmt.id curr_stmt.id%}" >
+          <a href="{% url "procmail:down" stmt.id curr_stmt.id%}" class="up_down">
             <i title="move down" class="fa fa-caret-down"></i>
           </a>
         {% endif %}
@@ -34,8 +56,39 @@
             {% endif %}
           {% endspaceless %}</span>
         {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
-      </li>
+      </div>
     {% endif %}
   {% endspaceless %}
   {% endfor %}
+</li>
 </ul>
+<a href="{% url "procmail:create" "" %}" class="btn btn-primary btn-lg btn-block">
+    {% trans "Add a rule" %}
+  </a>
+</div>
+<script>
+
+var sortables = []
+
+$( ".sortable" ).each(function() {
+  sortables.push(
+    Sortable.create(this,
+      {
+        onUpdate: function (evt) {
+          on_list_update("{{current_view_name}}", curr_parent_id, curr_id, evt);
+        },
+      }
+    )
+  );
+});
+
+$( document ).ready(function() {
+ var scroll = parseInt(getUrlHashParameter("scroll"));
+ if(scroll){
+     $('body').scrollTop(scroll);
+ }
+});
+
+$(".up_down").each(function() {$(this).hide()});
+
+</script>

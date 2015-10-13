@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load staticfiles %}
 <html>
 <head>
   <link
@@ -13,33 +14,19 @@
   <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
   <![endif]-->
   <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <script src="//cdn.jsdelivr.net/sortable/latest/Sortable.min.js"></script>
   <script
     src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"
     crossorigin="anonymous"
   ></script>
+  <script src="{% static "procmail/functions.js" %}"></script>
+  {% include "procmail/javascript.dtl" %}
   <link
     rel="stylesheet"
     href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
   >
-  <style>
-    th.collapse.in, td.collapse.in {
-      display: table-cell;
-    }
-    th {
-      white-space: nowrap;
-    }
-    .icon_help {
-      position: relative;
-      top: -7px;
-      right: -3px;
-      font-size:15px;
-      cursor: help;
-    }
-    pre {
-        overflow-x: auto !important;
-        max-width: 800px;
-    }
-    </style>
+  <link rel="stylesheet" href="{% static "procmail/styles.css" %}">
   </head>
   <body>
     <div class="container-fluid">
@@ -58,7 +45,7 @@
           {% if procmailrc %}
             <td style="vertical-align:top;min-width:100px;padding-right:10px">
               <h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
-              {% include "procmail/list.html" with procmailrc=procmailrc %}
+              {% include "procmail/list.dtl" with procmailrc=procmailrc %}
             </td>
           {% endif %}
           <td style="vertical-align:top">

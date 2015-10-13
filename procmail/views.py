@@ -12,14 +12,16 @@
 from django.shortcuts import render, redirect
 from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseServerError
 from django.contrib.formtools.wizard.views import SessionWizardView
+from django.core.urlresolvers import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 from pyprocmail.parser import ParseException
 
 import forms
 import utils
-
+import json
 
 def delete(request, id, view_name):
     try:
@@ -46,7 +48,7 @@ def delete(request, id, view_name):
             'type': _('assignement') if r.is_assignment() else _("recipe"),
             'title': r.meta_title if r.meta_title else r.gen_title(),
         }
-        return render(request, "procmail/delete.html", utils.context(params))
+        return render(request, "procmail/delete.dtl", utils.context(request, params))
 
 
 class CreateStatement(SessionWizardView):
@@ -76,7 +78,7 @@ class CreateStatement(SessionWizardView):
     }
 
     def get_template_names(self):
-        return "procmail/create.html"
+        return "procmail/create.dtl"
 
     def get_context_data(self, form, **kwargs):
         try:
@@ -142,15 +144,17 @@ class CreateStatement(SessionWizardView):
 
 
 @login_required
-def index(request):
+def index(request, id=None):
+    if id:
+        return redirect("procmail:index")
     try:
         procmailrc = utils.get_procmailrc(request.user)
     except ParseException as error:
         return parse_error(request, error)
     return render(
         request,
-        "procmail/index.html",
-        utils.context({"procmailrc": procmailrc, 'simple': True})
+        "procmail/index.dtl",
+        utils.context(request, {"procmailrc": procmailrc, 'simple': True})
     )
 
 
@@ -175,8 +179,8 @@ def parse_error(request, error):
     }
     return render(
         request,
-        "procmail/parse_error.html",
-        utils.context(params)
+        "procmail/parse_error.dtl",
+        utils.context(request, params)
     )
 
 
@@ -254,7 +258,7 @@ def edit_simple(request, id):
         'curr_stmt': r,
     }
 
-    return render(request, "procmail/edit_simple.html", utils.context(params))
+    return render(request, "procmail/edit_simple.dtl", utils.context(request, params))
 
 
 @login_required
@@ -327,7 +331,7 @@ def edit(request, id):
         elif r.is_assignment():
             params["form_meta"] = forms.MetaForm(statement=r, prefix="meta")
             params["form_assignment"] = forms.AssignmentFormSet(assignment=r, prefix="assignment")
-    return render(request, "procmail/edit.html", utils.context(params))
+    return render(request, "procmail/edit.dtl", utils.context(request, params))
 
 
 @login_required
@@ -373,3 +377,27 @@ def up_down(request, id, cur_id, op, test):
         return redirect("procmail:index")
     else:
         return redirect("procmail:edit", id=cur_id if id != cur_id else new_id)
+
+
+@login_required
+def move(request, old_id, new_id, parent_id):
+    try:
+        procmailrc = utils.get_procmailrc(request.user)
+    except ParseException as error:
+        return HttpResponseServerError("Syntax error in procmailrc", content_type="text/plain; charset=utf-8")
+    try:
+        parent = procmailrc[parent_id]
+        r = parent.pop(int(old_id))
+        parent.insert(int(new_id), r)
+        utils.set_procmailrc(request.user, procmailrc)
+        return HttpResponse("ok", content_type="text/plain; charset=utf-8")
+    except KeyError:
+        raise Http404()
+
+
+@csrf_exempt
+def reverse_view(request):
+    view_name = request.POST.get('view_name', "")
+    args = json.loads(request.POST.get('args', "[]"))
+    kwargs = json.loads(request.POST.get("kwargs", "{}"))
+    return HttpResponse(reverse(view_name, args=args, kwargs=kwargs))
