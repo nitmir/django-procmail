@@ -109,7 +109,7 @@ def set_extra(self, **kwargs):
     return self
 
 
-def _process_procmailrc(rules, flat=None):
+def _process_procmailrc(rules, flat=None, in_simple=False):
     if flat is None:
         flat = []
     for r in rules:
@@ -121,15 +121,16 @@ def _process_procmailrc(rules, flat=None):
                     'is_simple': True,
                     'initials': initials,
                     'custom': custom,
+                    'in_simple': in_simple,
                 }
             except exceptions.NonSimple:
-                r.django = {'is_simple': False}
+                r.django = {'is_simple': False, 'in_simple': in_simple}
             if r.is_recipe() and r.action.is_nested():
                 flat.append("in")
-                _process_procmailrc(r.action, flat)
+                _process_procmailrc(r.action, flat, in_simple or r.django['is_simple'])
                 flat.append("out")
         else:
-            r.django = {'is_simple': False}
+            r.django = {'is_simple': False, 'in_simple': in_simple}
     return flat
 
 

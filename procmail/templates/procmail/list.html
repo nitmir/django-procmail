@@ -1,10 +1,41 @@
 {% load cache %}
 <ul>
-{% for stmt in procmailrc.django.flat %}{% if stmt == "in" %}<ul>{% elif stmt == "out" %}</ul>{% elif stmt.is_comment %}{% else %}<li>{% spaceless %}
-{% if not stmt.is_first %}<a href="{% url "procmail:up" stmt.id curr_stmt.id%}" ><i title="move up" class="fa fa-caret-up"></i></a>{% endif %}
-{% if not stmt.is_last %}<a href="{% url "procmail:down" stmt.id curr_stmt.id%}" ><i title="move down" class="fa fa-caret-down"></i></a>{% endif %}
-{% if stmt.id != curr_stmt.id %}<a href="{% if stmt.django.is_simple %}{% url "procmail:edit_simple" stmt.id %}{% else %}{% url "procmail:edit" stmt.id %}{% endif %}">{% endif %}{% spaceless %}
-<span> {% if stmt.meta_title %}{{stmt.meta_title}}{% else %}{{stmt.gen_title}}{% endif %}</span>
-{% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
-{% endspaceless %}</li>{% endif %}{% endfor %}
+  {% for stmt in procmailrc.django.flat %}{% spaceless %}
+    {% if stmt == "in" %}
+      <ul>
+    {% elif stmt == "out" %}
+      </ul>
+    {% elif stmt.is_comment %}
+    {% elif not simple or not stmt.django.in_simple %}
+      <li>
+        {% if not stmt.is_first %}
+          <a href="{% url "procmail:up" stmt.id curr_stmt.id%}">
+            <i title="move up" class="fa fa-caret-up"></i>
+          </a>
+        {% endif %}
+        {% if not stmt.is_last %}
+          <a href="{% url "procmail:down" stmt.id curr_stmt.id%}" >
+            <i title="move down" class="fa fa-caret-down"></i>
+          </a>
+        {% endif %}
+        {% if stmt.id != curr_stmt.id %}
+          <a  href="{% spaceless %}
+              {% if simple and stmt.django.is_simple %}
+                {% url "procmail:edit_simple" stmt.id %}
+              {% else %}
+                {% url "procmail:edit" stmt.id %}
+              {% endif %}{% endspaceless %}">
+        {% endif %}{% spaceless %}
+          <span> {% spaceless %}
+            {% if stmt.meta_title %}
+              {{stmt.meta_title}}
+            {% else %}
+              {{stmt.gen_title}}
+            {% endif %}
+          {% endspaceless %}</span>
+        {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
+      </li>
+    {% endif %}
+  {% endspaceless %}
+  {% endfor %}
 </ul>

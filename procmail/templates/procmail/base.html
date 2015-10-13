@@ -1,59 +1,72 @@
 {% load i18n %}
 <html>
 <head>
-    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" media="all" rel="stylesheet">
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha256-Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc= sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-<style>
-th.collapse.in, td.collapse.in {
-  display: table-cell;
-}
-th {
-  white-space: nowrap;
-}
-.icon_help {
-  position: relative;
-  top: -7px;
-  right: -3px;
-  font-size:15px;
-  cursor: help;
-}
-pre {
-    overflow-x: auto !important;
-    max-width: 800px;
-}
-</style>
-</head>
-<body>
-<div class="container-fluid">
-{% if PROCMAIL_INPLACE == False %}
-<br/>
-<div class="alert alert-warning" role="alert">
-<i class="fa fa-exclamation-triangle fa-lg"></i>
-{% trans "Currently in debug mode. This application de not edit your real procmailrc but a copy made in the following directory :" %} {{PROCMAIL_DEBUG_DIR}}
-</div>
-{% endif %}
-<table>
-<tr>
-{% if procmailrc %}
-<td style="vertical-align:top;min-width:100px;padding-right:10px">
-<h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
-{% include "procmail/list.html" with procmailrc=procmailrc %}
-</td>
-{% endif %}
-<td style="vertical-align:top">
-{% block content %}
-{% endblock %}
-</td>
-</tr>
-</table>
-</div>
-</body>
+  <link
+    href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"
+    media="all"
+    rel="stylesheet"
+  >
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+  <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script
+    src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"
+    crossorigin="anonymous"
+  ></script>
+  <link
+    rel="stylesheet"
+    href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+  >
+  <style>
+    th.collapse.in, td.collapse.in {
+      display: table-cell;
+    }
+    th {
+      white-space: nowrap;
+    }
+    .icon_help {
+      position: relative;
+      top: -7px;
+      right: -3px;
+      font-size:15px;
+      cursor: help;
+    }
+    pre {
+        overflow-x: auto !important;
+        max-width: 800px;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      {% if PROCMAIL_INPLACE == False %}
+        <br/>
+        <div class="alert alert-warning" role="alert">
+          <i class="fa fa-exclamation-triangle fa-lg"></i>
+          {% blocktrans with directory=PROCMAIL_DEBUG_DIR %}
+            Currently in debug mode. This application de not edit your real procmailrc but a copy
+            made in the {{directory}} directory.
+          {% endblocktrans %}
+        </div>
+      {% endif %}
+      <table>
+        <tr>
+          {% if procmailrc %}
+            <td style="vertical-align:top;min-width:100px;padding-right:10px">
+              <h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
+              {% include "procmail/list.html" with procmailrc=procmailrc %}
+            </td>
+          {% endif %}
+          <td style="vertical-align:top">
+            {% block content %}
+            {% endblock %}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
 </html>

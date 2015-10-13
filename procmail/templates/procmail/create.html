@@ -1,21 +1,40 @@
 {% extends "procmail/base.html" %}
 {% load i18n %}
 {% block content %}
-{{ wizard.form.media }}
-<p>{% trans "Step" %} {{ wizard.steps.step1 }} {% trans "of" %} {{ wizard.steps.count }}</p>
-  <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".advanced_params">
+  {{ wizard.form.media }}
+  <p>{% trans "Step" %} {{ wizard.steps.step1 }} {% trans "of" %} {{ wizard.steps.count }}</p>
+  <button
+    class="btn btn-primary"
+    type="button"
+    data-toggle="collapse"
+    data-target=".advanced_params"
+   >
     {% trans "Show Advanced parameters" %}
   </button>
-<br/>
-<br/>
-<form action="" method="post">
-{% csrf_token %}
-{{ wizard.management_form }}
-{% include "procmail/form.html" with form=wizard.form %}
-{% if wizard.steps.prev %}
-<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.first }}" class="btn btn-secondary">{% trans "first step" %}</button>
-<button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}" class="btn btn-secondary">{% trans "prev step" %}</button>
-{% endif %}
-<input type="submit" value="{% trans "submit" %}" class="btn btn-primary"/>
-</form>
+  <br/>
+  <br/>
+  <form action="" method="post">
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    {% include "procmail/form.html" with form=wizard.form %}
+    {% if wizard.steps.prev %}
+      <button
+        name="wizard_goto_step"
+        type="submit"
+        value="{{ wizard.steps.first }}"
+        class="btn btn-secondary"
+      >
+        {% trans "first step" %}
+      </button>
+      <button
+        name="wizard_goto_step"
+        type="submit"
+        value="{{ wizard.steps.prev }}"
+        class="btn btn-secondary"
+      >
+        {% trans "prev step" %}
+      </button>
+    {% endif %}
+    <input type="submit" value="{% trans "submit" %}" class="btn btn-primary"/>
+  </form>
 {% endblock %}

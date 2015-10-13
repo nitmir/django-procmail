@@ -1,77 +1,108 @@
 {% extends "procmail/base.html" %}
 {% load i18n %}
 {% block content %}
-<h1>{% trans "Advanced editor" %}</h1>
-{% if curr_stmt.django.is_simple %}
-<a href="{% url "procmail:edit_simple" curr_stmt.id %}" class="btn btn-primary">{% trans "Go to the simple edition page" %}</a>
-{%  endif %}
-<form action="" method="post">
-  {% csrf_token %}
-  <h2>{% trans "Metadata" %}</h2>
-  {% include "procmail/form.html" with form=form_meta %}
-  <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".advanced_params">
-    {% trans "Show Advanced parameters" %}
-  </button>
-  {% if curr_stmt.is_recipe %}
+  <h1>{% trans "Advanced editor" %}</h1>
+  {% if curr_stmt.django.is_simple %}
+    <a href="{% url "procmail:edit_simple" curr_stmt.id %}" class="btn btn-primary">
+      {% trans "Go to the simple edition page" %}
+    </a>
+  {%  endif %}
+  <form action="" method="post">
+    {% csrf_token %}
+    <h2>{% trans "Metadata" %}</h2>
+    {% include "procmail/form.html" with form=form_meta %}
+    <button
+      class="btn btn-primary"
+      type="button"
+      data-toggle="collapse"
+      data-target=".advanced_params"
+    >
+      {% trans "Show Advanced parameters" %}
+    </button>
 
+    {% if curr_stmt.is_recipe %}
+      <h2>{% trans "Recipe" %}</h2>
+      <h3>{% trans "Header" %}</h3>
+      {% include "procmail/form.html" with form=form_header %}
 
+      <h3>{% trans "Conditions" %}</h3>
+      {% include "procmail/form.html" with form=form_condition %}
 
+      <h3>{% trans "Action" %}<h3>
+      {{form_action.show_init}}
+      {% if form_action.non_field_errors %}
+        {{form_action.non_field_errors}}
+      {% endif %}
+      <table class="table table-striped table-bordered">
+        <tr>
+          <td style="white-space: nowrap;">
+            {{form_action.action_type.label_tag}}
+          </td>
+          <td style="width:100%">
+            {{ form_action.action_type.errors }}
+            {{ form_action.action_type }}
+            {{ form_action.action_type.help_text}}
+          </td>
+        </tr>
+        <tr id="action_param">
+          <td>
+            {{form_action.action_param.label_tag}}
+          </td>
+          <td>
+            {{ form_action.action_param.errors }}
+            {{ form_action.action_param }}
+            {{ form_action.action_param.help_text}}
+          </td>
+        </tr>
+        {% if curr_stmt.action.is_nested %}
+          {% for stmt in curr_stmt %}
+            {% if not stmt.is_comment %}
+              <tr>
+                <td colspan="2">
+                  <a href="{% url "procmail:edit" stmt.id %}">
+                   {% if stmt.meta_title %}{{stmt.meta_title}}{% else %}{{stmt.gen_title}}{% endif %}
+                  </a>
+                </td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+        <tr id="action_nested">
+          <td colspan="2" style="text-align:center">
+            <input
+              type="submit"
+              name="action_add"
+              value="{% trans "Add actions" %}"
+              class="btn btn-primary btn-lg  btn-block"
+            />
+          </td>
+        </tr>
+      <table>
+      <script>
+      var hide_param = function() {
+       var value = $('#id_action-action_type').val();
+       if(value == "nested"){
+         $('#action_param').hide();
+         $('#action_nested').show();
+       } else {
+         $('#action_param').show();
+         $('#action_nested').hide();
+       }
+      };
 
-    <h2>{% trans "Recipe" %}</h2>
-    <h3>{% trans "Header" %}</h3>
-    {% include "procmail/form.html" with form=form_header %}
+      $('#id_action-action_type').change(hide_param);
+      $('#id_action-action_type').ready(hide_param);
+      </script>
 
-    <h3>{% trans "Conditions" %}</h3>
-    {% include "procmail/form.html" with form=form_condition %}
-
-    <h3>{% trans "Action" %}<h3>
-    {{form_action.show_init}}
-    {% if form_action.non_field_errors %}
-      {{form_action.non_field_errors}}
+    {% elif curr_stmt.is_assignment %}
+      <h2>Assignement</h2>
+      {% include "procmail/form.html" with form=form_assignment %}
     {% endif %}
-    <table class="table table-striped table-bordered">
-      <tr>
-        <td style="white-space: nowrap;">{{form_action.action_type.label_tag}}</td><td style="width:100%">{{ form_action.action_type.errors }} {{ form_action.action_type }} {{ form_action.action_type.help_text}}</td>
-      </tr>
-      <tr id="action_param">
-        <td>{{form_action.action_param.label_tag}}</td><td>{{ form_action.action_param.errors }} {{ form_action.action_param }} {{ form_action.action_param.help_text}}</td>
-      </tr>
-      {% if curr_stmt.action.is_nested %}
-      {% for stmt in curr_stmt %}
-      {% if not stmt.is_comment %}
-      <tr><td colspan="2"><a href="{% url "procmail:edit" stmt.id %}">{% if stmt.meta_title %}{{stmt.meta_title}}{% else %}{{stmt.gen_title}}{% endif %}</a></td></tr>
-      {% endif %}
-      {% endfor %}
-      {% endif %}
-      <tr id="action_nested">
-       <td colspan="2" style="text-align:center"><input type="submit" name="action_add" value="{% trans "Add actions" %}" class="btn btn-primary btn-lg  btn-block"/></td>
-      </tr>
-    <table>
-<script>
-var hide_param = function() {
- var value = $('#id_action-action_type').val();
- if(value == "nested"){
-   $('#action_param').hide();
-   $('#action_nested').show();
- } else {
-   $('#action_param').show();
-   $('#action_nested').hide();
- }
-};
 
-$('#id_action-action_type').change(hide_param);
-$('#id_action-action_type').ready(hide_param);
-</script>
-  {% elif curr_stmt.is_assignment %}
+    <input type="submit" value="{% trans "Submit" %}" class="btn btn-primary"/>
+    <input type="submit" value="{% trans "Delete" %}" name="delete_stmt" class="btn btn-danger" style="float:right"/>
+  </form>
 
-    <h2>Assignement</h2>
-    {% include "procmail/form.html" with form=form_assignment %}
-  {% endif %}
-
-  <input type="submit" value="{% trans "Submit" %}" class="btn btn-primary"/>
-  <input type="submit" value="{% trans "Delete" %}" name="delete_stmt" class="btn btn-danger" style="float:right"/>
-</form>
-
-<h2>{% trans "Preview" %}</h2>
-<pre>{{curr_stmt.render}}</pre>
+  <h2>{% trans "Preview" %}</h2>
+  <pre>{{curr_stmt.render}}</pre>
 {% endblock %}

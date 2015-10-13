@@ -43,10 +43,8 @@ def delete(request, id, view_name):
             'curr_stmt': r,
             'procmailrc': procmailrc,
             'view_name': view_name,
-            'msg': _('Are you sure you want to delete the %(type)s "%(title)s" ?') % {
-                'type': _('assignement') if r.is_assignment() else _("recipe"),
-                'title': r.meta_title if r.meta_title else r.gen_title(),
-            }
+            'type': _('assignement') if r.is_assignment() else _("recipe"),
+            'title': r.meta_title if r.meta_title else r.gen_title(),
         }
         return render(request, "procmail/delete.html", utils.context(params))
 
@@ -149,7 +147,11 @@ def index(request):
         procmailrc = utils.get_procmailrc(request.user)
     except ParseException as error:
         return parse_error(request, error)
-    return render(request, "procmail/index.html", utils.context({"procmailrc": procmailrc}))
+    return render(
+        request,
+        "procmail/index.html",
+        utils.context({"procmailrc": procmailrc, 'simple': True})
+    )
 
 
 @login_required
@@ -165,16 +167,16 @@ def download(request):
 
 
 def parse_error(request, error):
-    error_msg = _("""Fail to parse your procmailrc. You probably have a syntax error
-near %(line)s at line %(lineno)s, column %(col)s.""") % {
+    params = {
         'line': repr(error.line)[1:],
         'lineno': error.lineno,
-        'col': error.col
+        'col': error.col,
+        'error': error
     }
     return render(
         request,
         "procmail/parse_error.html",
-        utils.context({'error_msg': error_msg, 'error': error})
+        utils.context(params)
     )
 
 
@@ -243,6 +245,7 @@ def edit_simple(request, id):
         form_action = forms.SimpleActionSet(initial=initials['actions'], prefix="actions")
 
     params = {
+        'simple': True,
         'form_meta': form_meta,
         'form_cond_kind': form_cond_kind,
         'form_cond': form_cond,

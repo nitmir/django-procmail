@@ -1,22 +1,30 @@
 {% extends "procmail/base.html" %}
 {% load i18n %}
 {% block content %}
-<h1>{% trans "Simple editor" %}</h1>
-<form action="" method="post">
-  {% csrf_token %}
-<h2>{% trans "Metadata" %}</h2>
-{% include "procmail/form.html" with form=form_meta %}
-<h2>{% trans "Conditions" %}</h2>
-{% include "procmail/form.html" with form=form_cond_kind %}
-{% include "procmail/form.html" with form=form_cond %}
-<h2>{% trans "Actions" %}</h2>
-{% include "procmail/form.html" with form=form_action %}
+  <h1>{% trans "Simple editor" %}</h1>
+  <form action="" method="post">
+    {% csrf_token %}
+    <h2>{% trans "Metadata" %}</h2>
+    {% include "procmail/form.html" with form=form_meta %}
+    <h2>{% trans "Conditions" %}</h2>
+    {% include "procmail/form.html" with form=form_cond_kind %}
+    {% include "procmail/form.html" with form=form_cond %}
+    <h2>{% trans "Actions" %}</h2>
+    {% include "procmail/form.html" with form=form_action %}
 
-  <input type="submit" value="{% trans "Submit" %}" class="btn btn-primary"/>
-  <input type="submit" value="{% trans "Delete" %}" name="delete_stmt" class="btn btn-danger" style="float:right"/>
-</form>
-<p class="text-center">
-<a href="{% url "procmail:edit" curr_stmt.id %}" class="btn btn-warning">{% trans "Go to advanced edition page" %}</a>
-</p>
+    <input type="submit" value="{% trans "Submit" %}" class="btn btn-primary"/>
+    <input 
+      type="submit"
+      value="{% trans "Delete" %}"
+      name="delete_stmt"
+      class="btn btn-danger"
+      style="float:right"
+    />
+  </form>
+  <p class="text-center">
+    <a href="{% url "procmail:edit" curr_stmt.id %}" class="btn btn-warning">
+      {% trans "Go to advanced edition page" %}
+    </a>
+  </p>
 {% endblock %}
 

@@ -6,34 +6,37 @@
   {{form.non_form_errors}}
 {% endif %}
 <table class="table table-striped table-bordered"{% if table_id %} id="{{table_id}}"{% endif %}>
-{{form.show_init}}
-{% if form.forms %}
+  {{form.show_init}}
+  {% if form.forms %}
     {{ form.management_form }}
       <tr>
-      {% for field in form.0 %}
-         <th {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
-           {{field.label}}{% if field.help_text %} <span title="{{ field.help_text}}" class="icon_help"><i class="fa fa-question"></i></span>{% endif %}
-         </th>
-      {% endfor %}
+        {% for field in form.0 %}
+          <th {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
+            {{field.label}}{% if field.help_text %} <span title="{{ field.help_text}}" class="icon_help"><i class="fa fa-question"></i></span>{% endif %}
+          </th>
+        {% endfor %}
       </tr>
       {% for form in form %}
         {% if form.non_field_errors %}
           <tr><td colspan="30">{{form.non_field_errors}}</td></tr>
         {% endif %}
         <tr>
-        {% for field in form %}
-          <td {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
-            {{field.errors}} {{field}}
-          </td>
-        {% endfor %}
+          {% for field in form %}
+            <td {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
+              {{field.errors}} {{field}}
+            </td>
+          {% endfor %}
         </tr>
       {% endfor %}
 
-{% else %}
+  {% else %}
     {% for field in form %}
       <tr {% if field.field.show == False %}class="collapse advanced_params"{% endif %}>
-        {% if field.label %}<td>{{field.label_tag}}</td>{% endif%}<td{% if not field.label %} colspan="2"{% endif%}>{{ field.errors }} {{ field }} {{ field.help_text}}</td>
+        {% if field.label %}<td>{{field.label_tag}}</td>{% endif%}
+        <td{% if not field.label %} colspan="2"{% endif%}>
+          {{ field.errors }} {{ field }} {{ field.help_text}}
+        </td>
       </tr>
     {% endfor %}
-{% endif %}
+  {% endif %}
 </table>
