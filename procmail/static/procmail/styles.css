@@ -21,6 +21,13 @@ ul.sortable {
 ul.sortable:empty {
     border-top: 1px solid #DDD !important;
 }
+a.delete_list_item {
+    opacity: 0.3;
+    color: #C00;
+}
+a.delete_list_item:hover {
+    opacity: 1;
+}
 .panel-collapse>.list-group .list-group-item:first-child {
     border-top-right-radius: 0;
     border-top-left-radius: 0;
@@ -43,7 +50,7 @@ ul.sortable:empty {
     margin: 0 -15px;
     border-top: 1px solid #ddd !important;
     border-bottom: 0;
-    padding-left: 40px;
+    padding-left: 50px;
 }
 .panel-collapse .list-group-item li.list-group-item:last-child {
     padding-bottom: 0;
@@ -55,8 +62,22 @@ ul.sortable:empty {
 .panel-collapse div.list-group .list-group a.list-group-item {
     border-top: 1px solid #ddd !important;
     border-bottom: 0;
-    padding-left: 40px;
+    padding-left: 50px;
 }
 .panel-collapse .list-group-item li.list-group-item {
     border-top: 1px solid #DDD !important;
+}
+
+#procmailrc {
+    overflow-y: auto;
+    min-width:200px;
+    padding-right:10px;
+    background-color: white;
+}
+.table-nonfluid {
+   /*width: auto !important;*/
+}
+
+.add_rule {
+    margin-top: 10px;
 }

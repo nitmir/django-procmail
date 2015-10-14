@@ -2,8 +2,7 @@
 {% load staticfiles %}
 <html>
 <head>
-  {% for href in PROCMAIL_VENDOR_CSS.values %}
-    <link rel="stylesheet" href="{{href}}">
+  {% for href in PROCMAIL_VENDOR_CSS.values %}<link rel="stylesheet" href="{{href}}">
   {% endfor %}
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -11,8 +10,7 @@
   <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
   <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
   <![endif]-->
-  {% for src in PRCOMAIL_VENDOR_JAVASCRIPT.values %}
-    <script src="{{src}}"></script>
+  {% for src in PRCOMAIL_VENDOR_JAVASCRIPT.values %}<script src="{{src}}"></script>
   {% endfor %}
   <script src="{% static "procmail/functions.js" %}"></script>
   {% include "procmail/javascript.dtl" %}
@@ -33,14 +31,18 @@
       <table>
         <tr>
           {% if procmailrc %}
-            <td style="vertical-align:top;min-width:100px;padding-right:10px">
-              <h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
-              {% include "procmail/list.dtl" with procmailrc=procmailrc %}
+            <td tyle="vertical-align:top">
+              <div id="procmailrc">
+                <h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
+                {% include "procmail/list.dtl" with procmailrc=procmailrc %}
+              </div>
             </td>
           {% endif %}
           <td style="vertical-align:top">
-            {% block content %}
-            {% endblock %}
+            <div id="main" class="container">
+              {% block content %}
+              {% endblock %}
+            </div>
           </td>
         </tr>
       </table>

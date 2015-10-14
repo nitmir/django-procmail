@@ -112,6 +112,8 @@ def context(request, cntxt):
         'PROCMAIL_OR_SCORE': settings.PROCMAIL_OR_SCORE,
         'PROCMAIL_VENDOR_CSS': settings.PROCMAIL_VENDOR_CSS,
         'PRCOMAIL_VENDOR_JAVASCRIPT': settings.PRCOMAIL_VENDOR_JAVASCRIPT,
+        'current_namespace': request.resolver_match.namespace,
+        'current_url_name': request.resolver_match.url_name,
         'current_view_name': "%s:%s" % (
             request.resolver_match.namespace,
             request.resolver_match.url_name

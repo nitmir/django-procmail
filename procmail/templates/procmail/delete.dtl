@@ -19,7 +19,7 @@
         {{form}}
         <input type="submit" value="{% trans "Delete" %}" class="btn btn-danger"/>
         {% with "procmail:"|add:view_name as view_name %}
-          <a class="btn btn-default" href="{% url view_name curr_stmt.id %}" />
+          <a class="btn btn-default keep_scroll_list" href="{% url view_name curr_stmt.id %}" />
             {% trans "Cancel"%}
           </a>
         {% endwith %}

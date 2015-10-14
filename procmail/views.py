@@ -24,13 +24,16 @@ import utils
 import json
 
 
-def delete(request, id, view_name):
+def delete(request, id, view_name, curr_id=None):
+    if curr_id == id:
+        curr_id = None
     try:
         procmailrc = utils.get_procmailrc(request.user)
     except ParseException as error:
         return parse_error(request, error)
     try:
         r = procmailrc[id]
+        curr_stmt = procmailrc[curr_id if curr_id is not None else id]
     except KeyError:
         raise Http404()
     if request.method == 'POST':
@@ -38,12 +41,12 @@ def delete(request, id, view_name):
         if form.is_valid():
             id = r.delete()
             utils.set_procmailrc(request.user, procmailrc)
-        return redirect("procmail:%s" % view_name, id=id)
+        return redirect("procmail:%s" % view_name, id=(curr_id if curr_id else id))
     else:
         form = forms.DeleteStatement(statement=r)
         params = {
             'form': form,
-            'curr_stmt': r,
+            'curr_stmt': curr_stmt,
             'procmailrc': procmailrc,
             'view_name': view_name,
             'type': _('assignement') if r.is_assignment() else _("recipe"),
@@ -93,7 +96,7 @@ class CreateStatement(SessionWizardView):
                 break
             form_context.append(self.get_cleaned_data_for_step(step))
         context.update({'form_data': form_context, 'procmailrc': procmailrc})
-        return context
+        return utils.context(self.request, context)
 
     def done(self, form_list, form_dict, **kwargs):
         typ = self.get_cleaned_data_for_step("choose")["statement"]
@@ -146,7 +149,7 @@ class CreateStatement(SessionWizardView):
 
 @login_required
 def index(request, id=None):
-    if id:
+    if id is not None:
         return redirect("procmail:index")
     try:
         procmailrc = utils.get_procmailrc(request.user)

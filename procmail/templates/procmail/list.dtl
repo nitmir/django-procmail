@@ -1,7 +1,7 @@
-{% load cache %}
 {% load i18n %}
+{% load staticfiles %}
 <div class="panel-collapse">
-<ul id="procmailrc" class="sortable list-group" data-id="" data-parent_id="">
+<ul class="sortable list-group" data-id="" data-parent_id="">
   {% for stmt in procmailrc.django.flat %}{% spaceless %}
     {% if stmt == "in_list" %}{% spaceless %}
       {% if not stmt.data.in_simple or not simple %}
@@ -28,7 +28,8 @@
       </li>
       {% endif %}
     {% endspaceless %}{% elif not simple or not stmt.django.in_simple %}
-      <div>
+      <div style="white-space: nowrap;">
+        <div style="display:inline-block;width:100%">
         {% if not stmt.is_first %}
           <a href="{% url "procmail:up" stmt.id curr_stmt.id%}" class="up_down">
             <i title="move up" class="fa fa-caret-up"></i>
@@ -45,7 +46,9 @@
                 {% url "procmail:edit_simple" stmt.id %}
               {% else %}
                 {% url "procmail:edit" stmt.id %}
-              {% endif %}{% endspaceless %}">
+              {% endif %}{% endspaceless %}"
+              class="keep_scroll_list"
+          >
         {% endif %}{% spaceless %}
           <span> {% spaceless %}
             {% if stmt.meta_title %}
@@ -54,14 +57,25 @@
               {{stmt.gen_title}}
             {% endif %}
           {% endspaceless %}</span>
-        {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
+        {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>
+        </div>
+        <div style="display:inline-block;width:0%;">
+            <a
+                class="delete_list_item"
+                href="{% url "procmail:delete" stmt.id current_url_name curr_stmt.id %}"
+                title="{% trans "Delete" %}"
+            >
+                <i class="fa fa-times" class="delete_list_item"></i>{% endif %}
+            </a>
+        </div>
       </div>
     {% endif %}
   {% endspaceless %}{% endfor %}
 </ul>
-<a href="{% url "procmail:create" "" %}" class="btn btn-primary btn-lg btn-block">
+<a href="{% url "procmail:create" "" %}" class="btn btn-primary btn-block add_rule">
     {% trans "Add a rule" %}
-  </a>
+</a>
+<br/>
 </div>
 <script>
 
@@ -84,9 +98,6 @@ $( ".sortable" ).each(
                         do_move("{{current_view_name}}", curr_id, old_id, new_id);
                     }
                 },
-                onRemove: function (evt){
-                    //alert(evt.oldIndex);
-                },
                 onAdd: function (/**Event*/evt) {
                     var old_id = get_id($(evt.from).data("id"), evt.oldIndex);
                     var new_id = get_id(id, evt.newIndex);
@@ -94,24 +105,8 @@ $( ".sortable" ).each(
                 }
             }
         );
-        sortable.id = $(this).children("div:first").data("id");
         sortables.push(sortable);
     }
 );
-
-$(document).ready(
-    function() {
-        var scroll = parseInt(getUrlHashParameter("scroll"));
-        if(scroll){
-            $('body').scrollTop(scroll);
-        }
-    }
-);
-
-$(".up_down").each(
-    function() {
-        $(this).hide()
-    }
-);
-
 </script>
+<script src="{% static "procmail/list.js" %}"></script>

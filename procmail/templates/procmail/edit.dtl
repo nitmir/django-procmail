@@ -3,7 +3,7 @@
 {% block content %}
   <h1>{% trans "Advanced editor" %}</h1>
   {% if curr_stmt.django.is_simple %}
-    <a href="{% url "procmail:edit_simple" curr_stmt.id %}" class="btn btn-primary">
+    <a href="{% url "procmail:edit_simple" curr_stmt.id %}" class="btn btn-primary keep_scroll_list">
       {% trans "Go to the simple edition page" %}
     </a>
   {%  endif %}
@@ -33,7 +33,7 @@
       {% if form_action.non_field_errors %}
         {{form_action.non_field_errors}}
       {% endif %}
-      <table class="table table-striped table-bordered">
+      <table class="table table-striped table-bordered table-nonfluid">
         <tr>
           <td style="white-space: nowrap;">
             {{form_action.action_type.label_tag}}
@@ -73,7 +73,7 @@
               type="submit"
               name="action_add"
               value="{% trans "Add actions" %}"
-              class="btn btn-primary btn-lg  btn-block"
+              class="btn btn-primary btn-lg"
             />
           </td>
         </tr>

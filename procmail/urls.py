@@ -17,20 +17,25 @@ import views
 urlpatterns = patterns(
     '',
     url(r'^$', views.index, name="index"),
-    url(r'^(?P<id>([0-9.]+))$', views.index, name="index"),
+    url(r'^(?P<id>([0-9.]*))$', views.index, name="index"),
     url(r'^download$', views.download, name="download"),
-    url(r'^delete/(?P<id>([0-9.]+))/(?P<view_name>([^/]+))', views.delete, name="delete"),
-    url(r'^edit/(?P<id>([0-9.]*))', views.edit, name="edit"),
-    url(r'^edit_simple/(?P<id>([0-9.]*))', views.edit_simple, name="edit_simple"),
+    url(r'^delete/(?P<id>([0-9.]+))/(?P<view_name>([^/]+))$', views.delete, name="delete"),
     url(
-        r'^move/(?P<old_id>([0-9.]+))/(?P<new_id>([0-9.]+))/(?P<curr_id>([0-9.]*))',
+        r'^delete/(?P<id>([0-9.]+))/(?P<view_name>([^/]+))/(?P<curr_id>([0-9.]*))$',
+        views.delete,
+        name="delete"
+    ),
+    url(r'^edit/(?P<id>([0-9.]*))$', views.edit, name="edit"),
+    url(r'^edit_simple/(?P<id>([0-9.]*))$', views.edit_simple, name="edit_simple"),
+    url(
+        r'^move/(?P<old_id>([0-9.]+))/(?P<new_id>([0-9.]+))/(?P<curr_id>([0-9.]*))$',
         views.move,
         name="move"
     ),
-    url(r'^up/(?P<id>([0-9.]+))/(?P<cur_id>([0-9.]*))', views.up, name="up"),
-    url(r'^down/(?P<id>([0-9.]+))/(?P<cur_id>([0-9.]*))', views.down, name="down"),
+    url(r'^up/(?P<id>([0-9.]+))/(?P<cur_id>([0-9.]*))$', views.up, name="up"),
+    url(r'^down/(?P<id>([0-9.]+))/(?P<cur_id>([0-9.]*))$', views.down, name="down"),
     url(
-        r'^create/(?P<id>([0-9.]*))',
+        r'^create/(?P<id>([0-9.]*))$',
         login_required(views.CreateStatement.as_view()),
         name="create"
     ),
