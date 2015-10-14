@@ -1,35 +1,34 @@
 {% load cache %}
 {% load i18n %}
 <div class="panel-collapse">
-<ul id="procmailrc" class="sortable list-group">
+<ul id="procmailrc" class="sortable list-group" data-id="" data-parent_id="">
   {% for stmt in procmailrc.django.flat %}{% spaceless %}
-    {% if stmt == "in_list" %}
-      <ul class="sortable list-group">
-    {% elif stmt == "out_list" %}
+    {% if stmt == "in_list" %}{% spaceless %}
+      {% if not stmt.data.in_simple or not simple %}
+        <ul
+          class="sortable list-group"
+          {% for key, value in stmt.data.items %}
+          data-{{key}}="{{value}}"{% endfor %}
+        >
+      {% endif %}
+    {% endspaceless %}{% elif stmt == "out_list" %}{% spaceless %}
+      {% if not stmt.data.in_simple or not simple %}
       </ul>
-    {% elif stmt == "in_list_simple" %}
-      {% if not simple %}
-        <ul class="sortable list-group">
       {% endif %}
-    {% elif stmt == "out_list_simple" %}
-      {% if not simple %}
-        </ul>
+    {% endspaceless %}{% elif stmt == "in_item" %}{% spaceless %}
+      {% if not stmt.data.in_simple or not simple %}
+      <li
+        class="list-group-item"
+        {% for key, value in stmt.data.items %}
+        data-{{key}}="{{value}}"{% endfor %}
+      >
       {% endif %}
-    {% elif stmt == "in_item" %}
-      <li class="list-group-item">
-    {% elif stmt == "out_item" %}
+    {% endspaceless %}{% elif stmt == "out_item" %}{% spaceless %}
+      {% if not stmt.data.in_simple or not simple %}
       </li>
-    {% elif stmt == "in_item_simple" %}
-      {% if not simple %}
-        <li class="list-group-item">
       {% endif %}
-    {% elif stmt == "out_item_simple" %}
-      {% if not simple %}
-        </li>
-      {% endif %}
-    {% elif stmt.is_comment %}
-    {% elif not simple or not stmt.django.in_simple %}
-      <div data-parentid="{{stmt.parent.id}}" id="id_{{stmt.id}}">
+    {% endspaceless %}{% elif not simple or not stmt.django.in_simple %}
+      <div>
         {% if not stmt.is_first %}
           <a href="{% url "procmail:up" stmt.id curr_stmt.id%}" class="up_down">
             <i title="move up" class="fa fa-caret-up"></i>
@@ -58,9 +57,7 @@
         {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
       </div>
     {% endif %}
-  {% endspaceless %}
-  {% endfor %}
-</li>
+  {% endspaceless %}{% endfor %}
 </ul>
 <a href="{% url "procmail:create" "" %}" class="btn btn-primary btn-lg btn-block">
     {% trans "Add a rule" %}
@@ -70,25 +67,51 @@
 
 var sortables = []
 
-$( ".sortable" ).each(function() {
-  sortables.push(
-    Sortable.create(this,
-      {
-        onUpdate: function (evt) {
-          on_list_update("{{current_view_name}}", curr_parent_id, curr_id, evt);
-        },
-      }
-    )
-  );
-});
+$( ".sortable" ).each(
+    function() {
+        var id = $(this).data("id");
+        var sortable = Sortable.create(
+            this,
+            {
+                group: "procmailrc",
+                pull: true,
+                put: true,
+                onUpdate: function (evt) {
+                    if(evt.oldIndex != evt.newIndex){
+                        var parent_id = $(evt.item).data("parent_id");
+                        var old_id = get_id(parent_id, evt.oldIndex);
+                        var new_id = get_id(parent_id, evt.newIndex);
+                        do_move("{{current_view_name}}", curr_id, old_id, new_id);
+                    }
+                },
+                onRemove: function (evt){
+                    //alert(evt.oldIndex);
+                },
+                onAdd: function (/**Event*/evt) {
+                    var old_id = get_id($(evt.from).data("id"), evt.oldIndex);
+                    var new_id = get_id(id, evt.newIndex);
+                    do_move("{{current_view_name}}", curr_id, old_id, new_id);
+                }
+            }
+        );
+        sortable.id = $(this).children("div:first").data("id");
+        sortables.push(sortable);
+    }
+);
 
-$( document ).ready(function() {
- var scroll = parseInt(getUrlHashParameter("scroll"));
- if(scroll){
-     $('body').scrollTop(scroll);
- }
-});
+$(document).ready(
+    function() {
+        var scroll = parseInt(getUrlHashParameter("scroll"));
+        if(scroll){
+            $('body').scrollTop(scroll);
+        }
+    }
+);
 
-$(".up_down").each(function() {$(this).hide()});
+$(".up_down").each(
+    function() {
+        $(this).hide()
+    }
+);
 
 </script>

@@ -9,11 +9,5 @@ function reverse(view_name, args, kwargs){
     );
 }
 
-var curr_parent_id = "{{curr_stmt.parent.id}}";
-var curr_id;
-try{
-  curr_id = "{{curr_stmt.id}}".substring("{{curr_stmt.id}}".lastIndexOf(".") + 1);
-}catch(e){
-  curr_id = "{{curr_stmt.id}}";
-}
+var curr_id = "{{curr_stmt.id}}";
 </script>

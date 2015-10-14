@@ -23,6 +23,7 @@ import forms
 import utils
 import json
 
+
 def delete(request, id, view_name):
     try:
         procmailrc = utils.get_procmailrc(request.user)
@@ -198,6 +199,8 @@ def edit_simple(request, id):
         raise Http404()
     if not r.django['is_simple']:
         return redirect("procmail:edit", id=id)
+    if r.parent.django['is_simple']:
+        return redirect("procmail:edit_simple", id=r.parent.id)
 
     initials = r.django['initials']
 
@@ -380,17 +383,22 @@ def up_down(request, id, cur_id, op, test):
 
 
 @login_required
-def move(request, old_id, new_id, parent_id):
+def move(request, old_id, new_id, curr_id):
     try:
         procmailrc = utils.get_procmailrc(request.user)
-    except ParseException as error:
-        return HttpResponseServerError("Syntax error in procmailrc", content_type="text/plain; charset=utf-8")
+    except ParseException:
+        return HttpResponseServerError(
+            "Syntax error in procmailrc",
+            content_type="text/plain; charset=utf-8"
+        )
     try:
-        parent = procmailrc[parent_id]
-        r = parent.pop(int(old_id))
-        parent.insert(int(new_id), r)
+        current_item = procmailrc[curr_id]
+        old_parent = procmailrc[utils.get_parent_id(old_id)]
+        new_parent = procmailrc[utils.get_parent_id(new_id)]
+        r = old_parent.pop(utils.get_current_index(old_id))
+        new_parent.insert(utils.get_current_index(new_id), r)
         utils.set_procmailrc(request.user, procmailrc)
-        return HttpResponse("ok", content_type="text/plain; charset=utf-8")
+        return HttpResponse(current_item.id, content_type="text/plain; charset=utf-8")
     except KeyError:
         raise Http404()
 

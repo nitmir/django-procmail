@@ -15,6 +15,12 @@ pre {
     overflow-x: auto !important;
     max-width: 800px;
 }
+ul.sortable {
+    min-height: 35px;
+}
+ul.sortable:empty {
+    border-top: 1px solid #DDD !important;
+}
 .panel-collapse>.list-group .list-group-item:first-child {
     border-top-right-radius: 0;
     border-top-left-radius: 0;

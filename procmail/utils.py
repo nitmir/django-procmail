@@ -28,6 +28,17 @@ import config
 unicodeSpacesSet = set(procmail.parser.unicodeSpaces)
 
 
+def get_parent_id(id):
+    if not id:
+        return id
+    else:
+        return ".".join(id.split('.')[:-1])
+
+
+def get_current_index(id):
+    return int(id.split('.')[-1])
+
+
 def wizard_switch_by_stmt(stmt, alt=None):
     def f(wizard):
         return (
@@ -115,16 +126,34 @@ def set_extra(self, **kwargs):
     return self
 
 
+class ListControl(object):
+    def __init__(self, string, data=None):
+        self.string = string
+        if data is None:
+            self.data = {}
+        else:
+            self.data = data
+
+    def __eq__(self, y):
+        return self.string == y
+
+
 def _process_procmailrc(rules, flat=None, in_simple=False):
     if flat is None:
         flat = []
     for r in rules:
         if r.is_comment():
             continue
-        if in_simple:
-            flat.append("in_item_simple")
-        else:
-            flat.append("in_item")
+        flat.append(
+            ListControl(
+                "in_item",
+                data={
+                    "in_simple": in_simple,
+                    "id": r.id,
+                    "parent_id": r.parent.id
+                }
+            )
+        )
         flat.append(r)
         if r.is_recipe() or r.is_assignment():
             try:
@@ -138,26 +167,28 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
             except exceptions.NonSimple:
                 r.django = {'is_simple': False, 'in_simple': in_simple}
             if r.is_recipe() and r.action.is_nested():
-                if in_simple or r.django['is_simple']:
-                    flat.append("in_list_simple")
-                else:
-                    flat.append("in_list")
+                flat.append(
+                    ListControl(
+                        "in_list",
+                        data={
+                            "in_simple": in_simple or r.django['is_simple'],
+                            "id": r.id,
+                            "parent_id": r.parent.id,
+                        }
+                    )
+                )
                 _process_procmailrc(r.action, flat, in_simple or r.django['is_simple'])
-                if in_simple or r.django['is_simple']:
-                    flat.append("out_list_simple")
-                else:
-                    flat.append("out_list")
+                flat.append(
+                    ListControl("out_list", data={"in_simple": in_simple or r.django['is_simple']})
+                )
         else:
             r.django = {'is_simple': False, 'in_simple': in_simple}
-        if in_simple:
-            flat.append("out_item_simple")
-        else:
-            flat.append("out_item")
+        flat.append(ListControl("out_item", data={"simple": in_simple}))
     return flat
 
 
 def process_procmailrc(procmailrc, key):
-    procmailrc.django = {}
+    procmailrc.django = {'is_simple': False, 'in_simple': False}
     flat = _process_procmailrc(procmailrc)
     procmailrc.django['flat'] = flat
     procmailrc.django['key'] = key
