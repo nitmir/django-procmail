@@ -99,7 +99,12 @@ def context(request, cntxt):
         'PROCMAIL_INPLACE': settings.PROCMAIL_INPLACE,
         'PROCMAIL_DEBUG_DIR': settings.PROCMAIL_DEBUG_DIR,
         'PROCMAIL_OR_SCORE': settings.PROCMAIL_OR_SCORE,
-        'current_view_name': "%s:%s" % (request.resolver_match.namespace, request.resolver_match.url_name),
+        'PROCMAIL_VENDOR_CSS': settings.PROCMAIL_VENDOR_CSS,
+        'PRCOMAIL_VENDOR_JAVASCRIPT': settings.PRCOMAIL_VENDOR_JAVASCRIPT,
+        'current_view_name': "%s:%s" % (
+            request.resolver_match.namespace,
+            request.resolver_match.url_name
+        ),
     }
     base.update(cntxt)
     return base
