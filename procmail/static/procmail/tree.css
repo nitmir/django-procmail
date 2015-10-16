@@ -1,0 +1,53 @@
+#procmailrc h1 {
+    border-bottom:1px solid #DDD;
+}
+.tree ul {
+    padding-left:0px;
+    padding-right: 0px;
+    margin-right: 0px;
+}
+.tree li {
+    list-style-type:none;
+    margin:0;
+    padding:10px 0px 0px 0px;
+    position:relative;
+    padding-left: 10px;
+}
+
+.tree li::before, .tree li::after {
+    content:'';
+    left:0px;
+    position:absolute;
+    right:auto;
+}
+
+
+/* vertical */
+.tree li::before {
+    border-left:1px solid #DDD;
+    height:100%;
+    top:1px;
+    width:1px;
+}
+.tree li:last-child::before {
+    height:40px;
+}
+.tree > ul > li:first-child::before {
+    height:50px;
+    top:-10px;
+}
+/* horizontal */
+.tree li::after {
+    border-top:1px solid #DDD;
+    height:20px;
+    top:40px;
+    width:100%;
+}
+
+.tree li span {
+    display:inline-block;
+    padding:3px 3px;
+    text-decoration:none;
+}
+
+
