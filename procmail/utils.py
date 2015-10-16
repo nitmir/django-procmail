@@ -190,7 +190,7 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
                 )
         else:
             r.django = {'is_simple': False, 'in_simple': in_simple, 'display': display}
-        flat.append(ListControl("out_item", data={"simple": in_simple}))
+        flat.append(ListControl("out_item", data={"in_simple": in_simple}))
     return flat
 
 
