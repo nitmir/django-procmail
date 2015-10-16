@@ -13,29 +13,19 @@
   {% for src in PRCOMAIL_VENDOR_JAVASCRIPT.values %}<script src="{{src}}"></script>
   {% endfor %}
   <script src="{% static "procmail/functions.js" %}"></script>
-  {% include "procmail/javascript.dtl" %}
+  {% include "procmail/javascript.html" %}
   <link rel="stylesheet" href="{% static "procmail/styles.css" %}">
   <link rel="stylesheet" href="{% static "procmail/tree.css" %}">
   </head>
   <body>
     <div class="container-fluid">
-      {% if PROCMAIL_INPLACE == False %}
-        <br/>
-        <div class="alert alert-warning" role="alert">
-          <i class="fa fa-exclamation-triangle fa-lg"></i>
-          {% blocktrans with directory=PROCMAIL_DEBUG_DIR %}
-            Currently in debug mode. This application de not edit your real procmailrc but a copy
-            made in the {{directory}} directory.
-          {% endblocktrans %}
-        </div>
-      {% endif %}
       <table>
         <tr>
           {% if procmailrc %}
             <td tyle="vertical-align:top">
               <div id="procmailrc">
                 <h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
-                {% include "procmail/list.dtl" with procmailrc=procmailrc %}
+                {% include "procmail/list.html" with procmailrc=procmailrc %}
               </div>
             </td>
           {% endif %}
@@ -44,6 +34,16 @@
               <div class="row">
                 <div class="col-md-1 col-xs-0 col-sm-0"></div>
                 <div class="col-md-10 col-xs-12 col-sm-12">
+                  {% if PROCMAIL_INPLACE == False %}
+                    <br/>
+                    <div class="alert alert-warning" role="alert">
+                      <i class="fa fa-exclamation-triangle fa-lg"></i>
+                      {% blocktrans with directory=PROCMAIL_DEBUG_DIR %}
+                        Currently in debug mode. This application de not edit your real procmailrc but a copy
+                        made in the {{directory}} directory.
+                      {% endblocktrans %}
+                    </div>
+                  {% endif %}
                   {% block content %}
                   {% endblock %}
                 </div>

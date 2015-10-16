@@ -52,7 +52,7 @@ def delete(request, id, view_name, curr_id=None):
             'type': _('assignement') if r.is_assignment() else _("recipe"),
             'title': r.meta_title if r.meta_title else r.gen_title(),
         }
-        return render(request, "procmail/delete.dtl", utils.context(request, params))
+        return render(request, "procmail/delete.html", utils.context(request, params))
 
 
 class CreateStatement(SessionWizardView):
@@ -82,7 +82,7 @@ class CreateStatement(SessionWizardView):
     }
 
     def get_template_names(self):
-        return "procmail/create.dtl"
+        return "procmail/create.html"
 
     def get_context_data(self, form, **kwargs):
         try:
@@ -157,7 +157,7 @@ def index(request, id=None):
         return parse_error(request, error)
     return render(
         request,
-        "procmail/index.dtl",
+        "procmail/index.html",
         utils.context(request, {"procmailrc": procmailrc, 'simple': True})
     )
 
@@ -183,7 +183,7 @@ def parse_error(request, error):
     }
     return render(
         request,
-        "procmail/parse_error.dtl",
+        "procmail/parse_error.html",
         utils.context(request, params)
     )
 
@@ -264,7 +264,7 @@ def edit_simple(request, id):
         'curr_stmt': r,
     }
 
-    return render(request, "procmail/edit_simple.dtl", utils.context(request, params))
+    return render(request, "procmail/edit_simple.html", utils.context(request, params))
 
 
 @login_required
@@ -337,7 +337,7 @@ def edit(request, id):
         elif r.is_assignment():
             params["form_meta"] = forms.MetaForm(statement=r, prefix="meta")
             params["form_assignment"] = forms.AssignmentFormSet(assignment=r, prefix="assignment")
-    return render(request, "procmail/edit.dtl", utils.context(request, params))
+    return render(request, "procmail/edit.html", utils.context(request, params))
 
 
 @login_required

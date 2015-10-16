@@ -1,4 +1,4 @@
-{% extends "procmail/base.dtl" %}
+{% extends "procmail/base.html" %}
 {% load i18n %}
 {% block content %}
   <h1>{% trans "Advanced editor" %}</h1>
@@ -10,7 +10,7 @@
   <form action="" method="post">
     {% csrf_token %}
     <h2>{% trans "Metadata" %}</h2>
-    {% include "procmail/form.dtl" with form=form_meta %}
+    {% include "procmail/form.html" with form=form_meta %}
     <button
       class="btn btn-primary"
       type="button"
@@ -23,10 +23,10 @@
     {% if curr_stmt.is_recipe %}
       <h2>{% trans "Recipe" %}</h2>
       <h3>{% trans "Header" %}</h3>
-      {% include "procmail/form.dtl" with form=form_header %}
+      {% include "procmail/form.html" with form=form_header %}
 
       <h3>{% trans "Conditions" %}</h3>
-      {% include "procmail/form.dtl" with form=form_condition %}
+      {% include "procmail/form.html" with form=form_condition %}
 
       <h3>{% trans "Action" %}<h3>
       {{form_action.show_init}}
@@ -96,7 +96,7 @@
 
     {% elif curr_stmt.is_assignment %}
       <h2>Assignement</h2>
-      {% include "procmail/form.dtl" with form=form_assignment %}
+      {% include "procmail/form.html" with form=form_assignment %}
     {% endif %}
 
     <input type="submit" value="{% trans "Submit" %}" class="btn btn-primary"/>
