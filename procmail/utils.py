@@ -230,14 +230,20 @@ def get_procmailrc(user):
 
 def get_procmailrc_path(user):
     if settings.PROCMAIL_INPLACE:
-        home = os.path.expanduser("~%s" % user.username)
-        procmailrc_path = os.path.join(home, ".procmailrc")
+        if settings.PROCMAIL_TEST_PROCMAILRC is not None:
+            return settings.PROCMAIL_TEST_PROCMAILRC
+        else:
+            home = os.path.expanduser("~%s" % user.username)
+            procmailrc_path = os.path.join(home, ".procmailrc")
     else:
         procmailrc_path = os.path.join(settings.PROCMAIL_DEBUG_DIR, "%s.procmailrc" % user.username)
         if not os.path.isfile(procmailrc_path):
-            home = os.path.expanduser("~%s" % user.username)
-            if os.path.isfile(os.path.join(home, ".procmailrc")):
-                shutil.copy(os.path.join(home, ".procmailrc"), procmailrc_path)
+            if settings.PROCMAIL_TEST_PROCMAILRC is not None:
+                shutil.copy(settings.PROCMAIL_TEST_PROCMAILRC, procmailrc_path)
+            else:
+                home = os.path.expanduser("~%s" % user.username)
+                if os.path.isfile(os.path.join(home, ".procmailrc")):
+                    shutil.copy(os.path.join(home, ".procmailrc"), procmailrc_path)
     if not os.path.isfile(procmailrc_path) or os.path.getsize(procmailrc_path) < 2:
         with open(procmailrc_path, 'w') as f:
             f.write(settings.PROCMAIL_DEFAULT_PROCMAILRC)
