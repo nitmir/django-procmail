@@ -145,14 +145,17 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
         flat = []
     for r in rules:
         if r.is_comment():
-            continue
+            display = False
+        else:
+            display = True
         flat.append(
             ListControl(
                 "in_item",
                 data={
                     "in_simple": in_simple,
                     "id": r.id,
-                    "parent_id": r.parent.id
+                    "parent_id": r.parent.id,
+                    'display': display,
                 }
             )
         )
@@ -165,9 +168,10 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
                     'initials': initials,
                     'custom': custom,
                     'in_simple': in_simple,
+                    'display': display,
                 }
             except exceptions.NonSimple:
-                r.django = {'is_simple': False, 'in_simple': in_simple}
+                r.django = {'is_simple': False, 'in_simple': in_simple, 'display': display}
             if r.is_recipe() and r.action.is_nested():
                 flat.append(
                     ListControl(
@@ -176,6 +180,7 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
                             "in_simple": in_simple or r.django['is_simple'],
                             "id": r.id,
                             "parent_id": r.parent.id,
+                            'display': display,
                         }
                     )
                 )
@@ -184,7 +189,7 @@ def _process_procmailrc(rules, flat=None, in_simple=False):
                     ListControl("out_list", data={"in_simple": in_simple or r.django['is_simple']})
                 )
         else:
-            r.django = {'is_simple': False, 'in_simple': in_simple}
+            r.django = {'is_simple': False, 'in_simple': in_simple, 'display': display}
         flat.append(ListControl("out_item", data={"simple": in_simple}))
     return flat
 

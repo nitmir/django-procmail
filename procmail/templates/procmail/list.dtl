@@ -1,12 +1,12 @@
 {% load i18n %}
 {% load staticfiles %}
-<div class="panel-collapse">
-<ul class="sortable list-group" data-id="" data-parent_id="">
+<div class="tree">
+<ul class="sortable" data-id="" data-parent_id="" id="main_list">
   {% for stmt in procmailrc.django.flat %}{% spaceless %}
     {% if stmt == "in_list" %}{% spaceless %}
       {% if not stmt.data.in_simple or not simple %}
         <ul
-          class="sortable list-group"
+          class="sortable"
           {% for key, value in stmt.data.items %}
           data-{{key}}="{{value}}"{% endfor %}
         >
@@ -18,7 +18,7 @@
     {% endspaceless %}{% elif stmt == "in_item" %}{% spaceless %}
       {% if not stmt.data.in_simple or not simple %}
       <li
-        class="list-group-item"
+        class="{% if not stmt.data.display %}hide{% endif %}"
         {% for key, value in stmt.data.items %}
         data-{{key}}="{{value}}"{% endfor %}
       >
@@ -57,15 +57,15 @@
               {{stmt.gen_title}}
             {% endif %}
           {% endspaceless %}</span>
-        {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>
+        {% endspaceless %}{% if stmt.id != curr_stmt.id %}</a>{% endif %}
         </div>
-        <div style="display:inline-block;width:0%;">
+        <div style="display:inline-block;text-align:right" class="delete_list_item">
             <a
-                class="delete_list_item"
+                class="delete_list_item keep_scroll_list"
                 href="{% url "procmail:delete" stmt.id current_url_name curr_stmt.id %}"
                 title="{% trans "Delete" %}"
             >
-                <i class="fa fa-times" class="delete_list_item"></i>{% endif %}
+                <i class="fa fa-times" class="delete_list_item"></i>
             </a>
         </div>
       </div>
@@ -80,7 +80,6 @@
 <script>
 
 var sortables = []
-
 $( ".sortable" ).each(
     function() {
         var id = $(this).data("id");
@@ -102,6 +101,14 @@ $( ".sortable" ).each(
                     var old_id = get_id($(evt.from).data("id"), evt.oldIndex);
                     var new_id = get_id(id, evt.newIndex);
                     do_move("{{current_view_name}}", curr_id, old_id, new_id);
+                },
+                onStart: function (/**Event*/evt) {
+                    var item = $('li[data-id="'+ get_id(id, evt.oldIndex) +'"]');
+                    item.find("ul").first().css("display", "none");
+                },
+                onEnd: function (/**Event*/evt) {
+                    var item = $('li[data-id="'+ get_id(id, evt.oldIndex) +'"]');
+                    item.find("ul").first().css("display", "block");
                 }
             }
         );
