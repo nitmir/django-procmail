@@ -8,7 +8,7 @@
     {% include "procmail/form.html" with form=form_meta %}
     <h2>{% trans "Conditions" %}</h2>
     {% include "procmail/form.html" with form=form_cond_kind %}
-    {% include "procmail/form.html" with form=form_cond %}
+    {% include "procmail/form.html" with form=form_cond table_id="conditions_table" %}
     <h2>{% trans "Actions" %}</h2>
     {% include "procmail/form.html" with form=form_action %}
 
@@ -34,5 +34,20 @@
   <p class="text-center">
     
   </p>
+<script>
+$(document).ready(function() {
+    var show_conditions = function() {
+        if(this.checked){
+            if (this.value == 'all')
+                $('#conditions_table').hide()
+            else
+                $('#conditions_table').show()
+        }
+    }
+    $('input[type=radio][name={{form_cond_kind.kind.html_name}}]').each(show_conditions);
+    $('input[type=radio][name={{form_cond_kind.kind.html_name}}]').change(show_conditions);
+});
+
+</script>
 {% endblock %}
 

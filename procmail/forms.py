@@ -54,7 +54,30 @@ class SimpleConditionKind(forms.Form):
     )
 
 
-class SimpleCondition(forms.Form):
+class MakeExtra(forms.Form):
+
+    def prepare_extra(self):
+        for field_name, field in self.fields.items():
+            field.name = field_name
+            if 'show_if_selected' in field.extra:
+                try:
+                    field_name, selected = field.extra['show_if_selected']
+                    field.extra['show_if_selected'] = (self.fields[field_name], selected)
+                except KeyError:
+                    pass
+            if 'show_if_checked' in field.extra:
+                try:
+                    field_name = field.extra['show_if_checked']
+                    field.extra['show_if_checked'] = self.fields[field_name]
+                except KeyError:
+                    pass
+
+    def __init__(self, *args, **kwargs):
+        super(MakeExtra, self).__init__(*args, **kwargs)
+        self.prepare_extra()
+
+
+class SimpleCondition(MakeExtra):
 
     conditions = None
 
@@ -73,7 +96,9 @@ class SimpleCondition(forms.Form):
         required=False
     )
 
-    custom_header = forms.CharField(label=_('Custom header'), max_length=256, required=False)
+    custom_header = forms.CharField(
+        label=_('Custom header'), max_length=256, required=False
+        ).set_extra(show_if_selected=("object", ["custom_header"]))
 
     match = forms.ChoiceField(
         label=_('Match'),
@@ -93,7 +118,17 @@ class SimpleCondition(forms.Form):
         required=False
     )
 
-    param = forms.CharField(label=_('Parameter'), max_length=256, required=False)
+    param = forms.CharField(
+        label=_('Parameter'), max_length=256, required=False
+    ).set_extra(
+        show_if_selected=(
+            'match',
+            [
+                "contain", "not_contain", "equal", "not_equal",
+                "regex", "not_regex", "size_g", "size_l"
+            ]
+        )
+    )
 
     def clean_custom_header(self):
         if ':' in self.cleaned_data["custom_header"]:
@@ -202,7 +237,7 @@ SimpleConditionSet = formset_factory(
 )
 
 
-class SimpleAction(forms.Form):
+class SimpleAction(MakeExtra):
     statement = None
 
     action = forms.ChoiceField(
@@ -218,9 +253,15 @@ class SimpleAction(forms.Form):
         ]
     )
 
-    param = forms.CharField(label=_('Parameter'), max_length=256, required=False)
-    variable_name = forms.CharField(label=_('Variable name'), max_length=256, required=False)
-    variable_value = forms.CharField(label=_('Variable value'), max_length=256, required=False)
+    param = forms.CharField(
+        label=_('Parameter'), max_length=256, required=False
+    ).set_extra(show_if_selected=("action", ["save", "copy", "redirect", "redirect_copy"]))
+    variable_name = forms.CharField(
+        label=_('Variable name'), max_length=256, required=False
+    ).set_extra(show_if_selected=("action", ["variable"]))
+    variable_value = forms.CharField(
+        label=_('Variable value'), max_length=256, required=False
+    ).set_extra(show_if_selected=("action", ["variable"]))
 
     def clean(self):
         data = self.cleaned_data
@@ -280,7 +321,7 @@ SimpleActionSet = formset_factory(
 )
 
 
-class HeaderForm(forms.Form, utils.HidableFieldsForm):
+class HeaderForm(MakeExtra, utils.HidableFieldsForm):
 
     def __init__(self, *args, **kwargs):
         self.header = kwargs.pop('header', procmail.Header())
@@ -413,7 +454,10 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
         label=_('lockfile path'),
         max_length=256,
         required=False
-    ).set_extra(show_if_value_not="")
+    ).set_extra(
+        show_if_value_not="",
+        show_if_checked="lockfile"
+    )
 
     def clean(self):
         if not self.cleaned_data['h'] and not self.cleaned_data['b']:
@@ -449,7 +493,7 @@ class HeaderForm(forms.Form, utils.HidableFieldsForm):
             self.header.lockfile = False
 
 
-class ActionForm(forms.Form, utils.HidableFieldsForm):
+class ActionForm(MakeExtra, utils.HidableFieldsForm):
 
     def __init__(self, *args, **kwargs):
         self.action = kwargs.pop('action', None)
@@ -523,7 +567,7 @@ class ConditionBaseFormSet(BaseFormSet):
         self.conditions = conditions
 
 
-class ConditionForm(forms.Form):
+class ConditionForm(MakeExtra):
 
     condition = None
 
@@ -543,7 +587,7 @@ class ConditionForm(forms.Form):
     substitute_counter = forms.IntegerField(
         label=_("substitute counter"),
         initial=1
-    ).set_extra(show_if_value_not=1)
+    ).set_extra(show_if_value_not=1, show_if_checked="substitute")
     score = forms.BooleanField(
         label=_("score"),
         required=False,
@@ -553,12 +597,12 @@ class ConditionForm(forms.Form):
         label=_("score x"),
         initial=1,
         help_text=_("Score to add on the first match")
-    ).set_extra(show_if_value_not=1)
+    ).set_extra(show_if_value_not=1, show_if_checked="score")
     score_y = forms.IntegerField(
         label=_("score y"),
         initial=0,
         help_text=_("Score to add on subsequent matches")
-    ).set_extra(show_if_value_not=0)
+    ).set_extra(show_if_value_not=0, show_if_checked="score")
     variable = forms.BooleanField(
         label=_("variable"),
         required=False,
@@ -570,7 +614,7 @@ class ConditionForm(forms.Form):
         max_length=256,
         required=False,
         initial=""
-    ).set_extra(show_if_value_not="")
+    ).set_extra(show_if_value_not="", show_if_checked="variable")
 
     def clean(self):
         param = self.cleaned_data["param"]
