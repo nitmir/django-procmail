@@ -325,7 +325,8 @@ class HidableFieldsForm(object):
                 value = self.initial.get(field_name, field.initial)
             else:
                 value = field.initial
-            if field.extra.get('show_if_value_not', '__RESERVED_VALUE_TYHU') == value \
+            if field.extra \
+                    and field.extra.get('show_if_value_not', '__RESERVED_VALUE_TYHU') == value \
                     and not self.errors.get(field_name):
                 field.show = False
             else:
@@ -350,7 +351,11 @@ def show(self, field_name):
             ini = self.initial[i].get(field_name, form.fields[field_name].initial)
         else:
             ini = form.fields[field_name].initial
-        if form.fields[field_name].extra.get('show_if_value_not', '__RESERVED_VALUE_TYHU') == ini \
+        if form.fields[field_name].extra \
+                and form.fields[field_name].extra.get(
+                    'show_if_value_not',
+                    '__RESERVED_VALUE_TYHU'
+                ) == ini \
                 and not form.errors.get(field_name):
             self._show_dict[field_name] = False
         else:
