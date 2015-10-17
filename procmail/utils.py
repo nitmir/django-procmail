@@ -124,7 +124,7 @@ def context(request, cntxt):
 
 
 def set_extra(self, **kwargs):
-    self.extra = kwargs
+    self.extra = dict(kwargs)
     return self
 
 

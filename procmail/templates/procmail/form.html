@@ -47,75 +47,14 @@
   {% endif %}
 </table>
 
-<script>
-  var show = {};
-  {% spaceless %}
-  {% if form.forms %}
-    {% for form in form %}
-      {% for field in form %}
-        {% for f in form %}
-          {% if f.field.name %}
-            {% if field.field.extra.show_if_selected and f.field.name == field.field.extra.show_if_selected.0.name %}
-              show['{{field.auto_id}}'] = function (){
-                var show = false;
-                {% for value in field.field.extra.show_if_selected.1 %}
-                  if($('#{{f.auto_id}}').val() == '{{value}}')
-                    show = true;
-                {% endfor %}
-                if(show)
-                  $('#{{field.auto_id}}').show()
-                else
-                  $('#{{field.auto_id}}').hide()
-              };
-              $(document).ready(show['{{field.auto_id}}']);
-              $('#{{f.auto_id}}').change(show['{{field.auto_id}}']);
-            {% endif %}
-            {% if field.field.extra.show_if_checked and f.field.name == field.field.extra.show_if_checked.name %}
-              show['{{field.auto_id}}'] = function() {
-                if($('#{{f.auto_id}}')[0].checked)
-                  $('#{{field.auto_id}}').show()
-                else
-                  $('#{{field.auto_id}}').hide()
-              };
-              $(document).ready(show['{{field.auto_id}}']);
-              $('#{{f.auto_id}}').change(show['{{field.auto_id}}']);
-            {% endif %}
-          {% endif %}
-        {% endfor %}
-      {% endfor %}
-    {% endfor %}
-  {%else%}
-    {% for field in form %}
-      {% for f in form %}
-        {% if f.field.name %}
-          {% if field.field.extra.show_if_selected and f.field.name == field.field.extra.show_if_selected.0.name %}
-            show['{{field.auto_id}}'] = function (){
-              var show = false;
-              {% for value in field.field.extra.show_if_selected.1 %}
-                if($('#{{f.auto_id}}').val() == '{{value}}')
-                  show = true;
-              {% endfor %}
-              if(show)
-                $('#{{field.auto_id}}').show()
-              else
-                $('#{{field.auto_id}}').hide()
-            };
-            $(document).ready(show['{{field.auto_id}}']);
-            $('#{{f.auto_id}}').change(show['{{field.auto_id}}']);
-          {% endif %}
-          {% if field.field.extra.show_if_checked and f.field.name == field.field.extra.show_if_checked.name %}
-            show['{{field.auto_id}}'] = function() {
-              if($('#{{f.auto_id}}')[0].checked)
-                $('#{{field.auto_id}}').show()
-              else
-                $('#{{field.auto_id}}').hide()
-            };
-            $(document).ready(show['{{field.auto_id}}']);
-            $('#{{f.auto_id}}').change(show['{{field.auto_id}}']);
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
-  {% endif %}
-  {% endspaceless %}
-</script>
+
+{% spaceless %}
+{% if form.forms %}
+  {% for f in form %}
+    {% include "procmail/form_javascript.html" with form=f %}
+  {% endfor %}
+{% else %}
+  {% include "procmail/form_javascript.html" with form=form %}
+{% endif %}
+{% endspaceless %}
+
