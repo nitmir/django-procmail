@@ -18,11 +18,12 @@ import collections
 
 import utils
 import forms_initial
+import forms_utils
 from pyprocmail import procmail
 
 
-forms.Field.set_extra = utils.set_extra
-forms.Field.extra = None
+forms.Field.set_extra = forms_utils.set_extra
+forms.Field.extra = {}
 
 
 class DeleteStatement(forms.Form):
@@ -52,37 +53,6 @@ class SimpleConditionKind(forms.Form):
             ("all", _("all mails")),
         ]
     )
-
-
-def prepare_extra(form, field_name, field):
-    if field.extra:
-        if 'show_if_selected' in field.extra:
-            select_field_name, selected = field.extra['show_if_selected']
-            field.select = form[select_field_name]
-        if 'show_if_checked' in field.extra:
-            field_name = field.extra['show_if_checked']
-            field.checkbox = form[field_name]
-
-
-class MakeExtra(forms.Form):
-    def prepare_extra(self):
-        for field_name, field in self.fields.items():
-            prepare_extra(self, field_name, field)
-
-    def __init__(self, *args, **kwargs):
-        super(MakeExtra, self).__init__(*args, **kwargs)
-        self.prepare_extra()
-
-
-class MakeExtraSet(BaseFormSet):
-    def prepare_extra(self):
-        for form in self.forms:
-            for field_name, field in form.fields.items():
-                prepare_extra(form, field_name, field)
-
-    def __init__(self, *args, **kwargs):
-        super(MakeExtraSet, self).__init__(*args, **kwargs)
-        self.prepare_extra()
 
 
 class SimpleCondition(forms.Form):
@@ -226,7 +196,7 @@ class SimpleCondition(forms.Form):
             raise forms.ValidationError(_("Should not happening, contact an administrator 1"))
 
 
-class SimpleConditionBaseSet(MakeExtraSet):
+class SimpleConditionBaseSet(forms_utils.ExtraSet):
     def clean(self):
         conditions = collections.defaultdict(list)
         for form in self.forms:
@@ -310,7 +280,7 @@ class SimpleAction(forms.Form):
             raise forms.ValidationError(_("Should not happening, contact an administrator 2"))
 
 
-class SimpleActionBaseSet(MakeExtraSet):
+class SimpleActionBaseSet(forms_utils.ExtraSet):
     def clean(self):
         statements = []
         for form in self.forms:
@@ -329,7 +299,7 @@ SimpleActionSet = formset_factory(
 )
 
 
-class HeaderForm(MakeExtra, utils.HidableFieldsForm):
+class HeaderForm(forms_utils.Extra, forms_utils.HidableFieldsForm):
 
     def __init__(self, *args, **kwargs):
         self.header = kwargs.pop('header', procmail.Header())
@@ -501,7 +471,7 @@ class HeaderForm(MakeExtra, utils.HidableFieldsForm):
             self.header.lockfile = False
 
 
-class ActionForm(MakeExtra, utils.HidableFieldsForm):
+class ActionForm(forms_utils.Extra, forms_utils.HidableFieldsForm):
 
     def __init__(self, *args, **kwargs):
         self.action = kwargs.pop('action', None)
@@ -558,7 +528,7 @@ class ActionForm(MakeExtra, utils.HidableFieldsForm):
             )(*params)
 
 
-class ConditionBaseFormSet(MakeExtraSet):
+class ConditionBaseFormSet(forms_utils.ExtraSet, forms_utils.HidableFieldsFormSet):
 
     conditions = None
 
@@ -691,7 +661,7 @@ class ConditionForm(forms.Form):
             self.condition = condition
 
 
-class AssignmentBaseFormSet(BaseFormSet):
+class AssignmentBaseFormSet(BaseFormSet, forms_utils.HidableFieldsFormSet):
 
     variables = None
 
@@ -777,7 +747,3 @@ class StatementForm(forms.Form):
             ('recipe', _('Recipe')),
         ]
     )
-
-
-AssignmentFormSet.show_init = utils.show_init
-ConditionFormSet.show_init = utils.show_init

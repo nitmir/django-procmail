@@ -123,11 +123,6 @@ def context(request, cntxt):
     return base
 
 
-def set_extra(self, **kwargs):
-    self.extra = dict(kwargs)
-    return self
-
-
 class ListControl(object):
     def __init__(self, string, data=None):
         self.string = string
@@ -314,62 +309,6 @@ def is_simple_statement(stmt):
             return False
     else:
         return False
-
-
-class HidableFieldsForm(object):
-    def show_init(self):
-        for field_name, field in self.fields.items():
-            if self.data and self.add_prefix(field_name) in self.data:
-                value = field.to_python(self.data[self.add_prefix(field_name)])
-            elif self.initial:
-                value = self.initial.get(field_name, field.initial)
-            else:
-                value = field.initial
-            if field.extra \
-                    and field.extra.get('show_if_value_not', '__RESERVED_VALUE_TYHU') == value \
-                    and not self.errors.get(field_name):
-                field.show = False
-            else:
-                field.show = True
-        return ""
-
-
-def show(self, field_name):
-    try:
-        if field_name in self._show_dict:
-            return self._show_dict[field_name]
-    except AttributeError:
-        self._show_dict = {}
-
-    i = 0
-    for form in self:
-        if self.data and form.add_prefix(field_name) in self.data:
-            ini = form.fields[field_name].to_python(self.data[form.add_prefix(field_name)])
-        elif form.data and form.add_prefix(field_name) in form.data:
-            ini = form.fields[field_name].to_python(form.data[form.add_prefix(field_name)])
-        elif self.initial and len(self.initial) > i:
-            ini = self.initial[i].get(field_name, form.fields[field_name].initial)
-        else:
-            ini = form.fields[field_name].initial
-        if form.fields[field_name].extra \
-                and form.fields[field_name].extra.get(
-                    'show_if_value_not',
-                    '__RESERVED_VALUE_TYHU'
-                ) == ini \
-                and not form.errors.get(field_name):
-            self._show_dict[field_name] = False
-        else:
-            self._show_dict[field_name] = True
-            break
-        i += 1
-    return self._show_dict[field_name]
-
-
-def show_init(self):
-    for form in self:
-        for field_name, field in form.fields.items():
-            field.show = show(self, field_name)
-    return ""
 
 
 def make_recipe(procmailrc, parent_id):

@@ -1,6 +1,6 @@
 {% for field in form %}
   {% if field.field.extra.show_if_selected %}
-    {% with field.field.select as select %}
+    {% with field.field.extra.show_if_selected.0 as select %}
       <script>
         var show_function = function (){
           var show = false;
@@ -19,7 +19,7 @@
     {% endwith %}
   {% endif %}
   {% if field.field.extra.show_if_checked %}
-    {% with field.field.checkbox as checkbox %}
+    {% with field.field.extra.show_if_checked as checkbox %}
       <script>
         var show_function = function() {
           if($('#{{checkbox.auto_id}}')[0].checked)
