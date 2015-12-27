@@ -5,9 +5,9 @@ build:
 	python setup.py build
 
 install: dist
-        pip install pyprocmail -U --force-reinstall --no-deps -f ./dist/pyprocmail-${VERSION}.tar.gz
+	pip install pyprocmail -U --force-reinstall --no-deps -f ./dist/pyprocmail-${VERSION}.tar.gz
 uninstall:
-        pip uninstall pyprocmail || true
+	pip uninstall pyprocmail || true
 
 clean_pyc:
 	find ./ -name '*.pyc' -delete
