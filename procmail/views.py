@@ -13,9 +13,13 @@ from django.shortcuts import render, redirect
 from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, HttpResponseServerError
-from django.contrib.formtools.wizard.views import SessionWizardView
 from django.core.urlresolvers import reverse
 from django.views.decorators.csrf import csrf_exempt
+
+try:
+    from django.contrib.formtools.wizard.views import SessionWizardView
+except ImportError:
+    from formtools.wizard.views import SessionWizardView
 
 from pyprocmail.parser import ParseException
 

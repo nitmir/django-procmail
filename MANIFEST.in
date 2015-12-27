@@ -1,0 +1,8 @@
+include LICENSE
+include README.rst
+recursive-include procmail/static *
+recursive-exclude procmail/static *~
+recursive-include procmail/templates *
+recursive-exclude procmail/templates *~
+recursive-include procmail/locale *
+recursive-exclude procmail/locale *~
