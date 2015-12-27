@@ -21,7 +21,7 @@
     <div class="container-fluid">
       <table>
         <tr>
-          {% if procmailrc %}
+          {% if procmailrc != None %}
             <td tyle="vertical-align:top">
               <div id="procmailrc">
                 <h1><a href="{% url "procmail:index" %}">ProcmailRc</a></h1>
