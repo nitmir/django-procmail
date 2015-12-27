@@ -9,6 +9,8 @@ Django procmail
 
 Django procmail is a Django application allowing to edit procmail's procmailrc files.
 
+A demo is avaible at `<http://procmail-demo.genua.fr/>`_ with username/password demo/demo.
+
 
 Installation
 ------------
